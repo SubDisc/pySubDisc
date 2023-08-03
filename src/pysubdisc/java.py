@@ -8,7 +8,6 @@ def extraClassPath():
 def ensureJVMStarted():
   import jpype
   import jpype.imports
-  print(extraClassPath())
   if not jpype.isJVMStarted():
     jpype.startJVM(classpath=extraClassPath())
 

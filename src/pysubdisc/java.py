@@ -1,7 +1,7 @@
 def extraClassPath():
   import os
   # TODO: de-hardcode this name
-  jar = 'subdisc-lib-2.1152.jar'
+  jar = 'subdisc-gui.jar'
   jar = os.path.join(os.path.dirname(__file__), 'jars', jar)
   return [jar]
 

@@ -8,8 +8,8 @@ This package is still early in development and all functionality and syntax are 
 
 This will be streamlined soon:
 
-* From https://github.com/SubDisc/SubDisc, use `mvn package -P lib` to build `target/subdisc-lib-2.1152.jar`
-* Place `subdisc-lib-2.1152.jar` in `src/pysubdisc/jars`
+* From https://github.com/SubDisc/SubDisc, use `mvn package` to build `target/subdisc-gui.jar`
+* Place `subdisc-gui.jar` in `src/pysubdisc/jars`
 * Run `pip install .` from the root directory of the repository (containing pyproject.toml)
 
 ## Example

@@ -19,6 +19,7 @@ class Result(object):
 
 class SubgroupDiscovery(object):
   def __init__(self, targetConcept, data, index):
+    ensureJVMStarted()
     self._targetConcept = targetConcept
     self._data = data
     self._index = index
@@ -37,7 +38,6 @@ class SubgroupDiscovery(object):
       setattr(self, arg, locals()[arg])
 
   def _createSearchParametersObject(self):
-    ensureJVMStarted()
     from nl.liacs.subdisc import SearchParameters
     from nl.liacs.subdisc import QM, SearchStrategy, NumericOperatorSetting, NumericStrategy
 

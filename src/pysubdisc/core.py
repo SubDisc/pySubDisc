@@ -246,6 +246,54 @@ def _redirectSystemOutErr(f, *args, verbose=True, **kwargs):
 
   return ret
 
+def computeThreshold(sp, targetConcept, table, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False):
+    from nl.liacs.subdisc import TargetType, QualityMeasure, Validation, NormalDistribution
+    from nl.liacs.subdisc.gui import RandomQualitiesWindow
+    import scipy.stats
+
+    methods = [ RandomQualitiesWindow.RANDOM_DESCRIPTIONS,
+                RandomQualitiesWindow.RANDOM_SUBSETS,
+                RandomQualitiesWindow.SWAP_RANDOMIZATION ]
+    try:
+      method = next( str(m.toString()) for m in methods if str(m.toString()).lower() == method.lower() )
+    except StopIteration:
+      method = None
+    if method is None:
+      raise ValueError("Invalid method. Options are: " + ", ".join(str(m.toString()).lower() for m in methods))
+
+    # Logic duplicated from java MiningWindow
+    if targetConcept.getTargetType() == TargetType.SINGLE_NOMINAL:
+      positiveCount = targetConcept.getPrimaryTarget().countValues(targetConcept.getTargetValue(), None)
+      qualityMeasure = QualityMeasure(sp.getQualityMeasure(), table.getNrRows(), positiveCount)
+    elif targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
+      from nl.liacs.subdisc import QM, Stat, ProbabilityDensityFunction2
+      from java.util import BitSet
+      target = targetConcept.getPrimaryTarget()
+      qm = sp.getQualityMeasure()
+      b = BitSet(table.getNrRows())
+      b.set(0, table.getNrRows())
+      statistics = target.getStatistics(None, b, qm == QM.MMAD, QM.requiredStats(qm).contains(Stat.COMPL))
+      # TODO: ProbabilityDensityFunction or ProbabilityDensityFunction2?
+      pdf = ProbabilityDensityFunction2(target, None)
+      pdf.smooth()
+      qualityMeasure = QualityMeasure(qm, table.getNrRows(),
+                                      statistics.getSubgroupSum(),
+                                      statistics.getSubgroupSumSquaredDeviations(),
+                                      pdf)
+    else:
+      raise NotImplementedError()
+
+    validation = Validation(sp, table, None, qualityMeasure)
+    qualities = validation.getQualities([ method, str(amount) ])
+    if qualities is None:
+      # TODO: Check how to handle this
+      raise RuntimeError()
+
+    distro = NormalDistribution(qualities)
+
+    threshold = distro.getMu() + scipy.stats.norm.ppf(1 - significanceLevel) * distro.getSigma()
+
+    return threshold
 
 def generateResultDataFrame(sd, targetType):
   import pandas as pd

@@ -15,6 +15,7 @@ classifiers = [
 dependencies = [
   "JPype1",
   "pandas",
+  "scipy",
 ]
 
 [project.urls]

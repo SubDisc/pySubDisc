@@ -21,7 +21,7 @@ class SubgroupDiscovery(object):
   def __init__(self, targetConcept, data, index):
     ensureJVMStarted()
     self._targetConcept = targetConcept
-    self._data = data
+    self._table = data
     self._index = index
 
   @property
@@ -93,7 +93,7 @@ class SubgroupDiscovery(object):
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
     from nl.liacs.subdisc import Process
-    sd = _redirectSystemOutErr(Process.runSubgroupDiscovery, self._data, 0, None, sp, False, 1, None, verbose=verbose)
+    sd = _redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, None, sp, False, 1, None, verbose=verbose)
     return Result(sd, self._index, self._targetConcept.getTargetType())
 
 # TODO: Reduce code duplication between these factory functions

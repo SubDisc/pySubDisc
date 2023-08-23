@@ -79,12 +79,21 @@ class SubgroupDiscovery(object):
 
     return sp
 
+  def computeThreshold(self, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False, verbose=False):
+    sp = self._createSearchParametersObject()
 
+    threshold = _redirectSystemOutErr(computeThreshold, sp, self._targetConcept, self._table, significanceLevel=significanceLevel, method=method, amount=amount, verbose=verbose)
+
+    if setAsMinimum:
+      self.qualityMeasureMinimum = threshold
+    else:
+      return threshold
 
   def run(self, verbose=True):
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
-    sd = _runSubgroupDiscovery(self._data, 0, None, sp, False, 1, None, verbose=verbose)
+    from nl.liacs.subdisc import Process
+    sd = _redirectSystemOutErr(Process.runSubgroupDiscovery, self._data, 0, None, sp, False, 1, None, verbose=verbose)
     return Result(sd, self._index, self._targetConcept.getTargetType())
 
 # TODO: Reduce code duplication between these factory functions
@@ -212,9 +221,7 @@ def runSubgroupDiscovery(data, targetType, targetColumn, *, targetValue=None, qu
 
   return Result(sd, index, targetType)
 
-def _runSubgroupDiscovery(*args, verbose=True):
-  from nl.liacs.subdisc import Process
-
+def _redirectSystemOutErr(f, *args, verbose=True, **kwargs):
   from java.lang import System
   from java.io import PrintStream, File
   # TODO: Consider capturing output to return to caller
@@ -229,7 +236,7 @@ def _runSubgroupDiscovery(*args, verbose=True):
     System.setOut(PrintStream(File(os.devnull)))
     System.setErr(PrintStream(File(os.devnull)))
 
-  sd = Process.runSubgroupDiscovery(*args)
+  ret = f(*args, **kwargs)
 
   if not verbose:
     System.out.flush()
@@ -237,7 +244,7 @@ def _runSubgroupDiscovery(*args, verbose=True):
     System.setOut(oldOut)
     System.setErr(oldErr)
 
-  return sd
+  return ret
 
 
 def generateResultDataFrame(sd, targetType):

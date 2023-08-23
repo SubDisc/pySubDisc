@@ -1,6 +1,6 @@
 __version__="0.0.1"
 
-from .core import runSubgroupDiscovery
+from .core import singleNominalTarget, singleNumericTarget
 
-__all__ = [ runSubgroupDiscovery ]
+__all__ = [ singleNominalTarget, singleNumericTarget ]
 

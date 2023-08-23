@@ -21,8 +21,8 @@ import pysubdisc
 import pandas
 
 data = pandas.read_csv('adult.txt')
-result = pysubdisc.runSubgroupDiscovery(data, 'single nominal', 'target', targetValue='gr50K')
-print(result.asDataFrame())
+sd = pysubdisc.singleNominalTarget(data, 'target', 'gr50K')
+print(sd.run().asDataFrame())
 ```
 
 |    |   Depth |   Coverage |   Quality |   Target Share |   Positives |   p-Value | Conditions                            |

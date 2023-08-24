@@ -86,8 +86,8 @@ class SubgroupDiscovery(object):
 
     if setAsMinimum:
       self.qualityMeasureMinimum = threshold
-    else:
-      return threshold
+
+    return threshold
 
   def run(self, verbose=True):
     sp = self._createSearchParametersObject()

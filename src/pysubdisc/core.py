@@ -28,7 +28,7 @@ class SubgroupDiscovery(object):
   def targetType(self):
     return self._targetConcept.getTargetType().toString()
 
-  def _initSearchParameters(self, *, qualityMeasure='cortana quality', qualityMeasureMinimum=0.1, searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='beam', nominalSets=False, numericOperatorSetting='normal', numericStrategy='bins', searchStrategyWidth=10, nrBins=8, nrThreads=1):
+  def _initSearchParameters(self, *, qualityMeasure='cortana quality', qualityMeasureMinimum=0.1, searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='beam', nominalSets=False, numericOperatorSetting='normal', numericStrategy='bins', searchStrategyWidth=100, nrBins=8, nrThreads=1):
     # use inspect to avoid duplicating the argument list
     from inspect import signature
     sig = signature(self._initSearchParameters)

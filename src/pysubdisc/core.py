@@ -74,6 +74,7 @@ class SubgroupDiscovery(object):
     sp.setNumericOperators(numericOperatorSetting)
     sp.setNumericStrategy(numericStrategy)
     sp.setSearchStrategyWidth(self.searchStrategyWidth)
+    sp.setFilterSubgroups(self.filterSubgroups)
     sp.setNrBins(self.nrBins)
     sp.setNrThreads(self.nrThreads)
 

@@ -1,28 +1,13 @@
 import jpype
 from .java import ensureJVMStarted
 
-class Result(object):
-  def __init__(self, result, index, targetType):
-    # We store the index to be able to return subgroup members of a bool Series.
-    # We store the targetType since it affects the column names for the results.
-    # We convert the SubgroupSet (a Java TreeSet) into a list to better support the operations of our Result class.
-    self.result = result
-    self.subgroups = result.getResult()
-    self.index = index
-    self.targetType = targetType
-  def asDataFrame(self):
-    return generateResultDataFrame(self.result, self.targetType)
-  def getSubgroupMembers(self, index):
-    import pandas
-    members = self.subgroups[index].getMembers()
-    return pandas.Series(map(members.get, range(self.index.size)), index=self.index)
-
 class SubgroupDiscovery(object):
   def __init__(self, targetConcept, data, index):
     ensureJVMStarted()
     self._targetConcept = targetConcept
     self._table = data
     self._index = index
+    self._runCalled = False
 
   @property
   def targetType(self):
@@ -90,12 +75,29 @@ class SubgroupDiscovery(object):
 
     return threshold
 
+  def _ensurePostRun(self):
+    if not self._runCalled:
+      raise RuntimeError("This function is only available after a succesfull call of run()")
+
   def run(self, verbose=True):
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
     from nl.liacs.subdisc import Process
-    sd = _redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, None, sp, False, 1, None, verbose=verbose)
-    return Result(sd, self._index, self._targetConcept.getTargetType())
+    sd = _redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, None, sp, False, self.nrThreads, None, verbose=verbose)
+    self._runCalled = True
+    self._sd = sd
+
+  def asDataFrame(self):
+    self._ensurePostRun()
+    return generateResultDataFrame(self._sd, self._targetConcept.getTargetType())
+
+  def getSubgroupMembers(self, index):
+    self._ensurePostRun()
+    import pandas
+    subgroups = list(self._sd.getResult())
+    members = subgroups[index].getMembers()
+    return pandas.Series(map(members.get, range(self._index.size)), index=self._index)
+
 
 # TODO: Reduce code duplication between these factory functions
 def singleNominalTarget(data, targetColumn, targetValue):

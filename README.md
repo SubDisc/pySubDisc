@@ -23,7 +23,8 @@ import pandas
 data = pandas.read_csv('adult.txt')
 sd = pysubdisc.singleNominalTarget(data, 'target', 'gr50K')
 sd.qualityMeasureMinimum = 0.25
-print(sd.run().asDataFrame())
+sd.run()
+print(sd.asDataFrame())
 ```
 
 |    |   Depth |   Coverage |   Quality |   Target Share |   Positives |   p-Value | Conditions                            |

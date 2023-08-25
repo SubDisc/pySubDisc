@@ -64,6 +64,10 @@ class SubgroupDiscovery(object):
 
     return sp
 
+  def getSearchParameterDescription(self):
+    sp = self._createSearchParametersObject()
+    return str(self._targetConcept) + str(sp)
+
   def computeThreshold(self, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False, verbose=False):
     sp = self._createSearchParametersObject()
 

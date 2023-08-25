@@ -102,30 +102,11 @@ def generateResultDataFrame(sd, targetType):
 
   L = [ [ r.getDepth(), r.getCoverage(), r.getMeasureValue(), r.getSecondaryStatistic(), r.getTertiaryStatistic(), r.getPValue(), str(r) ] for r in sd.getResult() ]
 
-  # TODO: Would be nice to have these names available outside of the gui module
-  try:
-    from nl.liacs.subdics.gui import ResultTableModel
-    rtm = ResultTableModel(sd, targetType)
-  except:
-    rtm = None
+  from nl.liacs.subdics.gui import ResultTableModel
+  rtm = ResultTableModel(sd, targetType)
 
-  if rtm is not None:
-    secondaryName = rtm.getColumnName(4)
-    tertiaryName = rtm.getColumnName(5)
-  else:
-    from nl.liacs.subdisc import TargetType
-    name2Dict = {
-      TargetType.SINGLE_NOMINAL: 'Target Share',
-      TargetType.SINGLE_NUMERIC: 'Average',
-      # TODO
-    }
-    name3Dict = {
-      TargetType.SINGLE_NOMINAL: 'Positives',
-      TargetType.SINGLE_NUMERIC: 'St. Dev.',
-      # TODO
-    }
-    secondaryName = name2Dict[targetType]
-    tertiaryName = name3Dict[targetType]
+  secondaryName = rtm.getColumnName(4)
+  tertiaryName = rtm.getColumnName(5)
 
   df = pd.DataFrame(L, columns=['Depth', 'Coverage', 'Quality', secondaryName, tertiaryName, 'p-Value', 'Conditions'], copy=True)
   return df

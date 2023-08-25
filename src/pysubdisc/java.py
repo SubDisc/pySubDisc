@@ -18,3 +18,28 @@ def ensureJVMStarted():
   except ModuleNotFoundError as e:
     # TODO: Python 3.11 has a cleaner approach using e.add_note()
     raise ModuleNotFoundError("Failed to import from SubDisc jar") from e
+
+def redirectSystemOutErr(f, *args, verbose=True, **kwargs):
+  from java.lang import System
+  from java.io import PrintStream, File
+  # TODO: Consider capturing output to return to caller
+  #from java.io import ByteArrayOutputStream
+
+  if not verbose:
+    import os
+    oldOut = System.out
+    oldErr = System.err
+    System.out.flush()
+    System.err.flush()
+    System.setOut(PrintStream(File(os.devnull)))
+    System.setErr(PrintStream(File(os.devnull)))
+
+  ret = f(*args, **kwargs)
+
+  if not verbose:
+    System.out.flush()
+    System.err.flush()
+    System.setOut(oldOut)
+    System.setErr(oldErr)
+
+  return ret

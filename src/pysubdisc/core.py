@@ -1,5 +1,4 @@
-import jpype
-from .java import ensureJVMStarted
+from .java import ensureJVMStarted, redirectSystemOutErr
 
 class SubgroupDiscovery(object):
   def __init__(self, targetConcept, data, index):
@@ -68,7 +67,7 @@ class SubgroupDiscovery(object):
   def computeThreshold(self, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False, verbose=False):
     sp = self._createSearchParametersObject()
 
-    threshold = _redirectSystemOutErr(computeThreshold, sp, self._targetConcept, self._table, significanceLevel=significanceLevel, method=method, amount=amount, verbose=verbose)
+    threshold = redirectSystemOutErr(computeThreshold, sp, self._targetConcept, self._table, significanceLevel=significanceLevel, method=method, amount=amount, verbose=verbose)
 
     if setAsMinimum:
       self.qualityMeasureMinimum = threshold
@@ -83,7 +82,7 @@ class SubgroupDiscovery(object):
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
     from nl.liacs.subdisc import Process
-    sd = _redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, None, sp, False, self.nrThreads, None, verbose=verbose)
+    sd = redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, None, sp, False, self.nrThreads, None, verbose=verbose)
     self._runCalled = True
     self._sd = sd
 
@@ -98,88 +97,40 @@ class SubgroupDiscovery(object):
     members = subgroups[index].getMembers()
     return pandas.Series(map(members.get, range(self._index.size)), index=self._index)
 
+def generateResultDataFrame(sd, targetType):
+  import pandas as pd
 
-# TODO: Reduce code duplication between these factory functions
-def singleNominalTarget(data, targetColumn, targetValue):
-  ensureJVMStarted()
+  L = [ [ r.getDepth(), r.getCoverage(), r.getMeasureValue(), r.getSecondaryStatistic(), r.getTertiaryStatistic(), r.getPValue(), str(r) ] for r in sd.getResult() ]
 
-  from nl.liacs.subdisc import TargetConcept, TargetType, Table
-  from math import ceil
+  # TODO: Would be nice to have these names available outside of the gui module
+  try:
+    from nl.liacs.subdics.gui import ResultTableModel
+    rtm = ResultTableModel(sd, targetType)
+  except:
+    rtm = None
 
-  if not isinstance(data, Table):
-    index = data.index
-    data = createTableFromDataFrame(data)
+  if rtm is not None:
+    secondaryName = rtm.getColumnName(4)
+    tertiaryName = rtm.getColumnName(5)
   else:
-    index = pd.RangeIndex(data.getNrRows())
+    from nl.liacs.subdisc import TargetType
+    name2Dict = {
+      TargetType.SINGLE_NOMINAL: 'Target Share',
+      TargetType.SINGLE_NUMERIC: 'Average',
+      # TODO
+    }
+    name3Dict = {
+      TargetType.SINGLE_NOMINAL: 'Positives',
+      TargetType.SINGLE_NUMERIC: 'St. Dev.',
+      # TODO
+    }
+    secondaryName = name2Dict[targetType]
+    tertiaryName = name3Dict[targetType]
 
-  targetType = TargetType.SINGLE_NOMINAL
-
-  # can use column index or column name
-  target = data.getColumn(targetColumn)
-
-  targetConcept = TargetConcept()
-  targetConcept.setTargetType(targetType)
-  targetConcept.setPrimaryTarget(target)
-  targetConcept.setTargetValue(targetValue)
-
-  sd = SubgroupDiscovery(targetConcept, data, index)
-
-  sd._initSearchParameters(minimumCoverage = ceil(0.1 * data.getNrRows()))
-
-  return sd
-
-def singleNumericTarget(data, targetColumn):
-  ensureJVMStarted()
-
-  from nl.liacs.subdisc import TargetConcept, TargetType, Table
-  from math import ceil
-
-  if not isinstance(data, Table):
-    index = data.index
-    data = createTableFromDataFrame(data)
-  else:
-    index = pd.RangeIndex(data.getNrRows())
-
-  targetType = TargetType.SINGLE_NUMERIC
-
-  # can use column index or column name
-  target = data.getColumn(targetColumn)
-
-  targetConcept = TargetConcept()
-  targetConcept.setTargetType(targetType)
-  targetConcept.setPrimaryTarget(target)
-
-  sd = SubgroupDiscovery(targetConcept, data, index)
-
-  sd._initSearchParameters(qualityMeasure = 'z-score', minimumCoverage = ceil(0.1 * data.getNrRows()))
-
-  return sd
+  df = pd.DataFrame(L, columns=['Depth', 'Coverage', 'Quality', secondaryName, tertiaryName, 'p-Value', 'Conditions'], copy=True)
+  return df
 
 
-def _redirectSystemOutErr(f, *args, verbose=True, **kwargs):
-  from java.lang import System
-  from java.io import PrintStream, File
-  # TODO: Consider capturing output to return to caller
-  #from java.io import ByteArrayOutputStream
-
-  if not verbose:
-    import os
-    oldOut = System.out
-    oldErr = System.err
-    System.out.flush()
-    System.err.flush()
-    System.setOut(PrintStream(File(os.devnull)))
-    System.setErr(PrintStream(File(os.devnull)))
-
-  ret = f(*args, **kwargs)
-
-  if not verbose:
-    System.out.flush()
-    System.err.flush()
-    System.setOut(oldOut)
-    System.setErr(oldErr)
-
-  return ret
 
 def computeThreshold(sp, targetConcept, table, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False):
     from nl.liacs.subdisc import TargetType, QualityMeasure, Validation, NormalDistribution
@@ -230,73 +181,4 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel=0.05, method
 
     return threshold
 
-def generateResultDataFrame(sd, targetType):
-  import pandas as pd
-
-  L = [ [ r.getDepth(), r.getCoverage(), r.getMeasureValue(), r.getSecondaryStatistic(), r.getTertiaryStatistic(), r.getPValue(), str(r) ] for r in sd.getResult() ]
-
-  # TODO: Would be nice to have these names available outside of the gui module
-  try:
-    from nl.liacs.subdics.gui import ResultTableModel
-    rtm = ResultTableModel(sd, targetType)
-  except:
-    rtm = None
-
-  if rtm is not None:
-    secondaryName = rtm.getColumnName(4)
-    tertiaryName = rtm.getColumnName(5)
-  else:
-    from nl.liacs.subdisc import TargetType
-    name2Dict = {
-      TargetType.SINGLE_NOMINAL: 'Target Share',
-      TargetType.SINGLE_NUMERIC: 'Average',
-      # TODO
-    }
-    name3Dict = {
-      TargetType.SINGLE_NOMINAL: 'Positives',
-      TargetType.SINGLE_NUMERIC: 'St. Dev.',
-      # TODO
-    }
-    secondaryName = name2Dict[targetType]
-    tertiaryName = name3Dict[targetType]
-
-  df = pd.DataFrame(L, columns=['Depth', 'Coverage', 'Quality', secondaryName, tertiaryName, 'p-Value', 'Conditions'], copy=True)
-  return df
-
-def createTableFromDataFrame(data):
-  """Create subdisc Table from pandas DataFrame.
-  """
-  # TODO: Consider adding a 'dtype' keyword arg to override data types (cf pd.read_csv)
-  # TODO: Also, consider an option to convert integer columns to nominals (sklearn data sets use this) (pd.api.types.is_integer_dtype)
-  from nl.liacs.subdisc import Column
-  from nl.liacs.subdisc import AttributeType
-  from nl.liacs.subdisc import Table
-  from java.io import File
-  import pandas as pd
-
-  dummyfile = File('pandas.DataFrame')
-  nrows, ncols = data.shape
-  table = Table(dummyfile, nrows, ncols)
-  columns = table.getColumns()
-  index = pd.RangeIndex(nrows)
-
-  for i, name in enumerate(data.columns):
-    #print(i, name, data.dtypes[name], pd.api.types.is_numeric_dtype(data.dtypes[name]), pd.api.types.is_string_dtype(data.dtypes[name]), pd.api.types.is_bool_dtype(data.dtypes[name]))
-    if pd.api.types.is_string_dtype(data.dtypes[name]):
-      atype = AttributeType.NOMINAL
-      ctype = str
-    elif pd.api.types.is_bool_dtype(data.dtypes[name]):
-      atype = AttributeType.BINARY
-      ctype = bool
-    elif pd.api.types.is_numeric_dtype(data.dtypes[name]):
-      atype = AttributeType.NUMERIC
-      ctype = float
-    else:
-      raise ValueError(f"""Unsupported column type '{data.dtypes[name]}' for column '{name}'""")
-    column = Column(name, name, atype, i, nrows)
-    column.setData(data[name].set_axis(index).astype(ctype))
-    columns.add(column)
-
-  table.update()
-  return table
 

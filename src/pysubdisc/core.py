@@ -117,8 +117,8 @@ def generateResultDataFrame(sd, targetType):
   from nl.liacs.subdisc.gui import ResultTableModel
   rtm = ResultTableModel(sd.getResult(), targetType)
 
-  secondaryName = rtm.getColumnName(4)
-  tertiaryName = rtm.getColumnName(5)
+  secondaryName = str(rtm.getColumnName(4))
+  tertiaryName = str(rtm.getColumnName(5))
 
   df = pd.DataFrame(L, columns=['Depth', 'Coverage', 'Quality', secondaryName, tertiaryName, 'p-Value', 'Conditions'], copy=True)
   return df

@@ -106,8 +106,8 @@ def generateResultDataFrame(sd, targetType):
 
   L = [ [ r.getDepth(), r.getCoverage(), r.getMeasureValue(), r.getSecondaryStatistic(), r.getTertiaryStatistic(), r.getPValue(), str(r) ] for r in sd.getResult() ]
 
-  from nl.liacs.subdics.gui import ResultTableModel
-  rtm = ResultTableModel(sd, targetType)
+  from nl.liacs.subdisc.gui import ResultTableModel
+  rtm = ResultTableModel(sd.getResult(), targetType)
 
   secondaryName = rtm.getColumnName(4)
   tertiaryName = rtm.getColumnName(5)

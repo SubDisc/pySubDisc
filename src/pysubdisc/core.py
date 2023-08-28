@@ -101,6 +101,14 @@ class SubgroupDiscovery(object):
     members = subgroups[index].getMembers()
     return pandas.Series(map(members.get, range(self._index.size)), index=self._index)
 
+  def getModel(self, index, includeBase=True, relative=True, verbose=True):
+    self._ensurePostRun()
+    from nl.liacs.subdisc import TargetType
+    if self._targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
+      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, self._sd, index, includeBase=includeBase, relative=relative, verbose=verbose)
+    else:
+      raise NotImplementedError("getModel() is not implemented for this target type")
+
 def generateResultDataFrame(sd, targetType):
   import pandas as pd
 
@@ -166,4 +174,49 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel=0.05, method
 
     return threshold
 
+def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=True):
+  from nl.liacs.subdisc import TargetType, ProbabilityDensityFunction2
+  from pandas import DataFrame
+  import numpy as np
+
+  assert targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC
+  if not hasattr(index, '__iter__'):
+    index = [ index ]
+
+  pdfBase = ProbabilityDensityFunction2(targetConcept.getPrimaryTarget(), None)
+  pdfBase.smooth()
+  if includeBase:
+    L = [ pdfBase ]
+    columns = [ 'base' ]
+    scales = [ 1. ]
+  else:
+    L = []
+    columns = []
+    scales = []
+
+  subgroups = list(sd.getResult())
+  for i in index:
+    s = subgroups[i]
+    pdfSub = ProbabilityDensityFunction2(pdfBase, s.getMembers())
+    pdfSub.smooth()
+    assert pdfSub.size() == pdfBase.size()
+    L.append(pdfSub)
+    columns.append(i)
+    if relative:
+      scales.append( pdfSub.getAbsoluteCount() / pdfBase.getAbsoluteCount() )
+    else:
+      scales.append(1.)
+
+  rows = np.zeros((pdfBase.size(), ), dtype=float)
+  for i in range(pdfBase.size()):
+    rows[i] = pdfBase.getMiddle(i)
+
+  data = np.zeros((pdfBase.size(), len(L)), dtype=float)
+  for j, pdf in enumerate(L):
+    for i in range(pdfBase.size()):
+      data[i, j] = pdf.getDensity(i) * scales[j]
+
+  df = DataFrame(data=data, index=rows, columns=columns, copy=True)
+
+  return df
 

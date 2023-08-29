@@ -30,6 +30,16 @@ build-backend = "hatchling.build"
 path = "src/pysubdisc/VERSION"
 pattern = "(?P<version>.+)"
 
+[tool.hatch.build]
+ignore-vcs = true
+
 [tool.hatch.build.targets.sdist]
 exclude = [
+]
+include = [
+"src/pysubdisc/*.py",
+"src/pysubdisc/VERSION",
+"src/pysubdisc/jars/*.jar",
+"tests/*.py",
+"tests/*.txt"
 ]

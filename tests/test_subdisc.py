@@ -22,6 +22,7 @@ def test_enums():
   assert TargetType.SINGLE_NOMINAL.toString() == 'single nominal'
   assert TargetType.SINGLE_NUMERIC.toString() == 'single numeric'
   assert str(QM.CORTANA_QUALITY.toString()).lower() == 'cortana quality'
+  assert str(QM.Z_SCORE.toString()).lower() == 'z-score'
   assert str(SearchStrategy.BEAM.toString()).lower() == 'beam'
   assert str(NumericStrategy.NUMERIC_BINS.toString()).lower() == 'bins'
   x = NumericOperatorSetting.NORMAL 

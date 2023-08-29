@@ -1,0 +1,73 @@
+name: test and package pySubDisc
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Checkout SubDisc
+      uses: actions/checkout@v3
+      with:
+        repository: SubDisc/SubDisc
+        path: ext/SubDisc
+        # We need to fetch the full history because the commit count is used
+        # to identify the SubDisc version.
+        fetch-depth: 0
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Build SubDisc with Maven
+      run: mvn package
+      working-directory: ./ext/SubDisc
+
+    - name: Copy jar
+      run: |
+        mkdir -p src/pysubdisc/jars
+        cp ext/SubDisc/target/subdisc-gui.jar src/pysubdisc/jars
+
+    - name: Add jar version info
+      run: |
+        echo $(cat src/pysubdisc/VERSION)+jar$(git -C ext/SubDisc rev-list HEAD --count) > VERSION.tag
+        mv VERSION.tag src/pysubdisc/VERSION
+        echo "pysubdisc_version=$(cat src/pysubdisc/VERSION)" >> $GITHUB_ENV
+        echo "JAR version: $(cat src/pysubdisc/VERSION)"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build pytest
+
+    - name: Build package
+      run: python -m build
+
+    - name: Install
+      run: pip install dist/pysubdisc-${{ env.pysubdisc_version }}-py3-none-any.whl
+
+    - name: Test with pytest
+      # The pytest faulthandler interferes with jpype
+      run: pytest -p no:faulthandler
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pysubdisc-wheel
+        path: dist/pysubdisc-${{ env.pysubdisc_version }}-py3-none-any.whl
+        retention-days: 2

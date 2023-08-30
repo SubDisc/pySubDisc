@@ -170,7 +170,7 @@ search_parameters
 
 DOUBLE_REGRESSION_OUTPUT = \
 """Depth,Coverage,Quality,Slope,Intercept,p-Value,Conditions
-1,344,7.719849,0.345898,26.339434,NaN,marital-status = 'Never-married'
+1,344,7.719850,0.345898,26.339434,NaN,marital-status = 'Never-married'
 1,151,6.339853,0.731753,14.308075,NaN,relationship = 'Own-child'
 1,376,4.589319,-0.200944,52.310714,NaN,relationship = 'Husband'
 1,443,4.279790,-0.156311,49.533067,NaN,marital-status = 'Married-civ-spouse'

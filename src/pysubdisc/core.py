@@ -109,7 +109,7 @@ class SubgroupDiscovery(object):
     members = subgroups[index].getMembers()
     return pandas.Series(map(members.get, range(self._index.size)), index=self._index)
 
-  def getModel(self, index, includeBase=True, relative=True, verbose=True):
+  def getModel(self, index, includeBase=True, verbose=True, **kwargs):
     if index is None:
       # small hack to allow being called by getBaseModel() pre-run
       index = []
@@ -120,7 +120,9 @@ class SubgroupDiscovery(object):
 
     from nl.liacs.subdisc import TargetType
     if self._targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
-      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, sd, index, includeBase=includeBase, relative=relative, verbose=verbose)
+      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, sd, index, includeBase=includeBase, verbose=verbose, **kwargs)
+    if self._targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
+      return redirectSystemOutErr(getModelDoubleRegression, self._targetConcept, sd, index, dfIndex=self._index, includeBase=includeBase, verbose=verbose, **kwargs)
     else:
       raise NotImplementedError("getModel() is not implemented for this target type")
 
@@ -233,6 +235,73 @@ def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=T
   for j, pdf in enumerate(L):
     for i in range(pdfBase.size()):
       data[i, j] = pdf.getDensity(i) * scales[j]
+
+  df = DataFrame(data=data, index=rows, columns=columns, copy=True)
+
+  return df
+
+def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase=True):
+  from nl.liacs.subdisc import TargetType, QM, RegressionMeasure
+  from pandas import DataFrame
+  import numpy as np
+
+  assert targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION
+  if not hasattr(index, '__iter__'):
+    index = [ index ]
+
+  # Create a dataframe with one row per sample.
+  # Columns: 'x', the primary target column
+  #          'y base', the secondary target column
+  #          'pred base', the predicted value with the base regression model
+  # and for each requested subgroup nr #:
+  #          'y #', NaN if sample is not in subgroup, otherwise y value
+  #          'pred #', the predicted value with the subgroup's regression model
+
+
+  if includeBase:
+    columns = [ 'x', 'y base', 'pred base' ]
+  else:
+    columns = [ 'x' ]
+
+  L = []
+  subgroups = None
+  for i in index:
+    if subgroups is None:
+      # small hack to avoid calling getResult() if index is empty
+      subgroups = list(sd.getResult())
+    s = subgroups[i]
+    L.append(s)
+    columns.extend([f'y {i}', f'pred {i}'])
+
+  xcoords = np.array(targetConcept.getPrimaryTarget().getFloats())
+  nrRows = xcoords.shape[0]
+
+  # REGRESSION_SSD_COMPLEMENT is the default here, but doesn't really matter
+  RM = RegressionMeasure(QM.REGRESSION_SSD_COMPLEMENT, targetConcept.getPrimaryTarget(), targetConcept.getSecondaryTarget())
+  slope = RM.getSlope()
+  intercept = RM.getIntercept()
+
+  if dfIndex is not None:
+    rows = range(nrRows)
+  else:
+    rows = dfIndex
+
+  data = np.zeros((nrRows, len(columns)), dtype=float)
+
+  data[:, 0] = xcoords
+  if includeBase:
+    data[:, 1] = targetConcept.getSecondaryTarget().getFloats()
+    data[:, 2] = intercept + slope * data[:, 0]
+
+  for j, s in enumerate(L):
+    members = s.getMembers()
+    data[:, 2*j+3] = targetConcept.getSecondaryTarget().getFloats()
+    slope = s.getSecondaryStatistic()
+    intercept = s.getTertiaryStatistic()
+    for i in range(data.shape[0]):
+      if not members.get(i):
+        data[i, 2*j+3] = np.NaN
+      data[i, 2*j+4] = intercept + slope * data[i, 0]
 
   df = DataFrame(data=data, index=rows, columns=columns, copy=True)
 

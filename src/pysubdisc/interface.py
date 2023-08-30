@@ -95,4 +95,31 @@ def singleNumericTarget(data, targetColumn):
 
   return sd
 
+def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
+  ensureJVMStarted()
 
+  from nl.liacs.subdisc import TargetConcept, TargetType, Table
+  from math import ceil
+
+  if not isinstance(data, Table):
+    index = data.index
+    data = createTableFromDataFrame(data)
+  else:
+    index = pd.RangeIndex(data.getNrRows())
+
+  targetType = TargetType.DOUBLE_REGRESSION
+
+  # can use column index or column name
+  primaryTarget = data.getColumn(primaryTargetColumn)
+  secondaryTarget = data.getColumn(secondaryTargetColumn)
+
+  targetConcept = TargetConcept()
+  targetConcept.setTargetType(targetType)
+  targetConcept.setPrimaryTarget(primaryTarget)
+  targetConcept.setSecondaryTarget(secondaryTarget)
+
+  sd = SubgroupDiscovery(targetConcept, data, index)
+
+  sd._initSearchParameters(qualityMeasure = 'sign. of slope diff. (complement)', minimumCoverage = ceil(0.1 * data.getNrRows()))
+
+  return sd

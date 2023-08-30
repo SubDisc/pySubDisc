@@ -1,6 +1,6 @@
-from .interface import singleNominalTarget, singleNumericTarget
+from .interface import singleNominalTarget, singleNumericTarget, doubleRegressionTarget
 
-__all__ = [ singleNominalTarget, singleNumericTarget ]
+__all__ = [ singleNominalTarget, singleNumericTarget, doubleRegressionTarget ]
 
 
 # Set package version

@@ -135,3 +135,57 @@ def test_single_numeric(adult_data):
   ref = pandas.read_csv(io.StringIO(SINGLE_NUMERIC_OUTPUT))
   pandas.testing.assert_frame_equal(df, ref, atol=1e-06)
 
+DOUBLE_REGRESSION_PARAMS = \
+"""target_concept
+\tnr_target_attributes = 1
+\ttarget_type = double regression
+\tprimary_target = age
+\ttarget_value = null
+\tsecondary_target = hours-per-week
+search_parameters
+\tquality_measure = Sign. of Slope Diff. (complement)
+\tquality_measure_minimum = 3.0
+\tsearch_depth = 1
+\tminimum_coverage = 100
+\tmaximum_coverage_fraction = 0.9
+\tminimum_support = 0
+\tmaximum_subgroups = 1000
+\tminimum_improvement = 0.0
+\tfilter_subgroups = true
+\tmaximum_time = 0.0
+\tsearch_strategy = beam
+\tuse_nominal_sets = false
+\tsearch_strategy_width = 100
+\tnumeric_operators = [<=, >=]
+\tnumeric_strategy = bins
+\tnr_bins = 8
+\tnr_threads = 1
+\talpha = 0.5
+\tbeta = 1.0
+\tpost_processing_do_autorun = true
+\tpost_processing_count = 20
+\tbeam_seed = []
+\toverall_ranking_loss = 0.0
+"""
+
+DOUBLE_REGRESSION_OUTPUT = \
+"""Depth,Coverage,Quality,Slope,Intercept,p-Value,Conditions
+1,344,7.719849,0.345898,26.339434,NaN,marital-status = 'Never-married'
+1,151,6.339853,0.731753,14.308075,NaN,relationship = 'Own-child'
+1,376,4.589319,-0.200944,52.310714,NaN,relationship = 'Husband'
+1,443,4.279790,-0.156311,49.533067,NaN,marital-status = 'Married-civ-spouse'
+1,279,3.988836,-0.105054,44.648198,NaN,relationship = 'Not-in-family'
+1,126,3.684870,-0.229244,50.648992,NaN,occupation = 'Craft-repair'
+1,136,3.643090,-0.272924,53.771664,NaN,marital-status = 'Divorced'
+1,500,3.198273,0.172905,33.307597,NaN,fnlwgt >= 180609.0
+1,500,3.196495,-0.010646,40.553510,NaN,fnlwgt <= 180572.0"""
+
+def test_double_regression(adult_data):
+  sd = pysubdisc.doubleRegressionTarget(adult_data, 'age', 'hours-per-week')
+  sd.qualityMeasureMinimum = 3.0
+  paramdesc = sd.getSearchParameterDescription()
+  assert paramdesc == DOUBLE_REGRESSION_PARAMS
+  sd.run(verbose=False)
+  df = sd.asDataFrame()
+  ref = pandas.read_csv(io.StringIO(DOUBLE_REGRESSION_OUTPUT))
+  pandas.testing.assert_frame_equal(df, ref, atol=1e-06)

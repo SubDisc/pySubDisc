@@ -64,7 +64,7 @@ def singleNominalTarget(data, targetColumn, targetValue):
 
   sd = SubgroupDiscovery(targetConcept, data, index)
 
-  sd._initSearchParameters(minimumCoverage = ceil(0.1 * data.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'cortana quality', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd
 
@@ -91,7 +91,7 @@ def singleNumericTarget(data, targetColumn):
 
   sd = SubgroupDiscovery(targetConcept, data, index)
 
-  sd._initSearchParameters(qualityMeasure = 'z-score', qualityMeasureMinimum=1.0, minimumCoverage = ceil(0.1 * data.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'z-score', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd
 

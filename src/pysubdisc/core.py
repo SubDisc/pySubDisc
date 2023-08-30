@@ -78,6 +78,9 @@ class SubgroupDiscovery(object):
 
     return threshold
 
+  def getBaseModel(self, verbose=True):
+    return self.getModel(None, includeBase=True, verbose=verbose)
+
   def _ensurePostRun(self):
     if not self._runCalled:
       raise RuntimeError("This function is only available after a succesfull call of run()")
@@ -102,10 +105,17 @@ class SubgroupDiscovery(object):
     return pandas.Series(map(members.get, range(self._index.size)), index=self._index)
 
   def getModel(self, index, includeBase=True, relative=True, verbose=True):
-    self._ensurePostRun()
+    if index is None:
+      # small hack to allow being called by getBaseModel() pre-run
+      index = []
+      sd = None
+    else:
+      self._ensurePostRun()
+      sd = self._sd
+
     from nl.liacs.subdisc import TargetType
     if self._targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
-      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, self._sd, index, includeBase=includeBase, relative=relative, verbose=verbose)
+      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, sd, index, includeBase=includeBase, relative=relative, verbose=verbose)
     else:
       raise NotImplementedError("getModel() is not implemented for this target type")
 
@@ -194,8 +204,11 @@ def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=T
     columns = []
     scales = []
 
-  subgroups = list(sd.getResult())
+  subgroups = None
   for i in index:
+    if subgroups is None:
+      # small hack to avoid calling getResult() if index is empty
+      subgroups = list(sd.getResult())
     s = subgroups[i]
     pdfSub = ProbabilityDensityFunction2(pdfBase, s.getMembers())
     pdfSub.smooth()

@@ -260,8 +260,10 @@ def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase
 
   if includeBase:
     columns = [ 'x', 'y base', 'pred base' ]
+    baseCols = 3
   else:
     columns = [ 'x' ]
+    baseCols = 1
 
   L = []
   subgroups = None
@@ -295,13 +297,13 @@ def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase
 
   for j, s in enumerate(L):
     members = s.getMembers()
-    data[:, 2*j+3] = targetConcept.getSecondaryTarget().getFloats()
     slope = s.getSecondaryStatistic()
     intercept = s.getTertiaryStatistic()
+    data[:, 2*j+baseCols] = targetConcept.getSecondaryTarget().getFloats()
+    data[:, 2*j+baseCols+1] = intercept + slope * data[:, 0]
     for i in range(data.shape[0]):
       if not members.get(i):
-        data[i, 2*j+3] = np.NaN
-      data[i, 2*j+4] = intercept + slope * data[i, 0]
+        data[i, 2*j+baseCols] = np.NaN
 
   df = DataFrame(data=data, index=rows, columns=columns, copy=True)
 

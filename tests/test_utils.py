@@ -70,3 +70,20 @@ def test_getmodel_doubleregression(adult_data):
   assert df['y 0'].count() == 344
   assert df['pred 0'].count() == 1000
   assert df['pred 0'][0] ==  pytest.approx(39.0 * 0.345898 + 26.339434, abs=1e-4)
+
+def test_view(adult_data):
+  view = adult_data[adult_data['education'] == 'Bachelors']
+  assert view.shape == (166, 15)
+
+  sd = pysubdisc.singleNominalTarget(view, 'target', 'gr50K')
+  assert sd.minimumCoverage == 17
+
+  sd.run(verbose=False)
+
+  df = sd.asDataFrame()
+  assert df['Quality'][0] == pytest.approx(0.539402, abs=1e-6)
+  assert df['Coverage'][0] == 84
+
+  members = sd.getSubgroupMembers(0)
+  assert members.sum() == 84
+  assert all(members.index == view.index)

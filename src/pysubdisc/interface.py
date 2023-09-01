@@ -64,7 +64,7 @@ def singleNominalTarget(data, targetColumn, targetValue):
 
   sd = SubgroupDiscovery(targetConcept, data, index)
 
-  sd._initSearchParameters(qualityMeasure = 'cortana quality', minimumCoverage = ceil(0.1 * data.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'CORTANA_QUALITY', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd
 
@@ -91,7 +91,7 @@ def singleNumericTarget(data, targetColumn):
 
   sd = SubgroupDiscovery(targetConcept, data, index)
 
-  sd._initSearchParameters(qualityMeasure = 'z-score', minimumCoverage = ceil(0.1 * data.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'Z_SCORE', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd
 
@@ -120,6 +120,6 @@ def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
 
   sd = SubgroupDiscovery(targetConcept, data, index)
 
-  sd._initSearchParameters(qualityMeasure = 'sign. of slope diff. (complement)', minimumCoverage = ceil(0.1 * data.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'REGRESSION_SSD_COMPLEMENT', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd

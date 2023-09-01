@@ -36,3 +36,7 @@ print(sd.asDataFrame())
 |  4 |       1 |        728 |  0.326105 |       0.311813 |         227 |       nan | age >= 29.0                           |
 |  5 |       1 |        552 |  0.263425 |       0.317029 |         175 |       nan | education-num >= 10.0                 |
 
+
+## Documentation
+
+The SubDisc documentation might be of help for working with pySubDisc: https://github.com/SubDisc/SubDisc/wiki

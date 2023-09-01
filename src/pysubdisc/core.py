@@ -12,7 +12,7 @@ class SubgroupDiscovery(object):
   def targetType(self):
     return self._targetConcept.getTargetType().toString()
 
-  def _initSearchParameters(self, *, qualityMeasure='cortana quality', searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='beam', nominalSets=False, numericOperatorSetting='normal', numericStrategy='bins', searchStrategyWidth=100, nrBins=8, nrThreads=1):
+  def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=1):
     # use inspect to avoid duplicating the argument list
     from inspect import signature
     sig = signature(self._initSearchParameters)
@@ -23,7 +23,10 @@ class SubgroupDiscovery(object):
 
     from nl.liacs.subdisc import QM
     if not isinstance(qualityMeasure, QM):
-      qualityMeasure = QM.fromString(qualityMeasure)
+      if hasattr(QM, qualityMeasure.upper()):
+        qualityMeasure = getattr(QM, qualityMeasure.upper())
+      else:
+        raise ValueError("Invalid qualityMeasure")
     self.qualityMeasureMinimum = float(str(qualityMeasure.MEASURE_DEFAULT))
 
   def _createSearchParametersObject(self):
@@ -32,22 +35,28 @@ class SubgroupDiscovery(object):
 
     qualityMeasure = self.qualityMeasure
     if not isinstance(qualityMeasure, QM):
-      qualityMeasure = QM.fromString(qualityMeasure)
+      if hasattr(QM, qualityMeasure.upper()):
+        qualityMeasure = getattr(QM, qualityMeasure.upper())
+      else:
+        raise ValueError("Invalid qualityMeasure")
     searchStrategy = self.searchStrategy
     if not isinstance(searchStrategy, SearchStrategy):
-      searchStrategy = SearchStrategy.fromString(searchStrategy)
+      if hasattr(SearchStrategy, searchStrategy.upper()):
+        searchStrategy = getattr(SearchStrategy, searchStrategy.upper())
+      else:
+        raise ValueError("Invalid searchStrategy")
     numericOperatorSetting = self.numericOperatorSetting
     if not isinstance(numericOperatorSetting, NumericOperatorSetting):
-      # The string values of NumericOperatorSetting are in HTML (to encode symbols for greater-equal, etc.).
-      # Instead, we look up the names of enum constants. The only attributes
-      # of the class that are full caps are the enum constants.
       if hasattr(NumericOperatorSetting, numericOperatorSetting.upper()):
         numericOperatorSetting = getattr(NumericOperatorSetting, numericOperatorSetting.upper())
       else:
         raise ValueError("Invalid numericOperatorSetting")
     numericStrategy = self.numericStrategy
     if not isinstance(numericStrategy, NumericStrategy):
-      numericStrategy = NumericStrategy.fromString(numericStrategy)
+      if hasattr(NumericStrategy, numericStrategy.upper()):
+        numericStrategy = getattr(NumericStrategy, numericStrategy.upper())
+      else:
+        raise ValueError("Invalid numericStrategy")
 
 
     sp = SearchParameters()
@@ -73,7 +82,7 @@ class SubgroupDiscovery(object):
     sp = self._createSearchParametersObject()
     return str(self._targetConcept) + str(sp)
 
-  def computeThreshold(self, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False, verbose=False):
+  def computeThreshold(self, *, significanceLevel=0.05, method='SWAP_RANDOMIZATION', amount=100, setAsMinimum=False, verbose=False):
     sp = self._createSearchParametersObject()
 
     threshold = redirectSystemOutErr(computeThreshold, sp, self._targetConcept, self._table, significanceLevel=significanceLevel, method=method, amount=amount, verbose=verbose)
@@ -142,20 +151,15 @@ def generateResultDataFrame(sd, targetType):
 
 
 
-def computeThreshold(sp, targetConcept, table, *, significanceLevel=0.05, method='swap-randomization', amount=100, setAsMinimum=False):
+def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amount, setAsMinimum=False):
     from nl.liacs.subdisc import TargetType, QualityMeasure, Validation, NormalDistribution
     from nl.liacs.subdisc.gui import RandomQualitiesWindow
     import scipy.stats
 
-    methods = [ RandomQualitiesWindow.RANDOM_DESCRIPTIONS,
-                RandomQualitiesWindow.RANDOM_SUBSETS,
-                RandomQualitiesWindow.SWAP_RANDOMIZATION ]
-    try:
-      method = next( str(m.toString()) for m in methods if str(m.toString()).lower() == method.lower() )
-    except StopIteration:
-      method = None
-    if method is None:
-      raise ValueError("Invalid method. Options are: " + ", ".join(str(m.toString()).lower() for m in methods))
+    methods = [ 'RANDOM_DESCRIPTIONS', 'RANDOM_SUBSETS', 'SWAP_RANDOMIZATION' ]
+    if method.upper() not in methods:
+      raise ValueError("Invalid method. Options are: " + ", ".join(methods))
+    method = getattr(RandomQualitiesWindow, method).toString()
 
     # Logic duplicated from java MiningWindow
     if targetConcept.getTargetType() == TargetType.SINGLE_NOMINAL:

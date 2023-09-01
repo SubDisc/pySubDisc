@@ -14,19 +14,22 @@ def test_classes():
   from nl.liacs.subdisc.gui import ResultTableModel, RandomQualitiesWindow
 
 def test_enums():
-  # Test string versions of defaults for enums
+  # Test defaults for enums
   pysubdisc.java.ensureJVMStarted()
   from nl.liacs.subdisc import TargetType, QM, SearchStrategy, NumericOperatorSetting, NumericStrategy
   from nl.liacs.subdisc.gui import RandomQualitiesWindow
-  assert str(RandomQualitiesWindow.SWAP_RANDOMIZATION).lower() ==  'swap-randomization'
-  assert TargetType.SINGLE_NOMINAL.toString() == 'single nominal'
-  assert TargetType.SINGLE_NUMERIC.toString() == 'single numeric'
-  assert str(QM.CORTANA_QUALITY.toString()).lower() == 'cortana quality'
-  assert str(QM.Z_SCORE.toString()).lower() == 'z-score'
-  assert str(QM.REGRESSION_SSD_COMPLEMENT.toString()).lower() == 'sign. of slope diff. (complement)'
-  assert str(SearchStrategy.BEAM.toString()).lower() == 'beam'
-  assert str(NumericStrategy.NUMERIC_BINS.toString()).lower() == 'bins'
-  x = NumericOperatorSetting.NORMAL 
+  _ = RandomQualitiesWindow.RANDOM_SUBSETS
+  _ = RandomQualitiesWindow.RANDOM_DESCRIPTIONS
+  _ = RandomQualitiesWindow.SWAP_RANDOMIZATION
+  _ = TargetType.SINGLE_NOMINAL
+  _ = TargetType.SINGLE_NUMERIC
+  _ = TargetType.DOUBLE_REGRESSION
+  _ = QM.CORTANA_QUALITY
+  _ = QM.Z_SCORE
+  _ = QM.REGRESSION_SSD_COMPLEMENT
+  _ = SearchStrategy.BEAM
+  _ = NumericStrategy.NUMERIC_BINS
+  _ = NumericOperatorSetting.NORMAL
   
 def test_ResultTableModel():
   # Test that ResultTableModel columns 4 and 5 correspond to secondary/tertiary

@@ -1,4 +1,5 @@
 import pysubdisc
+import matplotlib.pyplot as plt
 import pandas
 
 data = pandas.read_csv('adult.txt')
@@ -6,11 +7,14 @@ sd = pysubdisc.singleNumericTarget(data, 'age') #using age as a (somewhat useles
 sd.searchDepth = 1
 sd.numericStrategy = 'BEST'
 sd.qualityMeasure = 'EXPLAINED VARIANCE'
-
-#run 100 swap-randomised SD runs in order to determine the minimum required quality to reach a significance level alpha = 0.05
-sd.computeThreshold(setAsMinimum=True, verbose=False)
-print("minimum quality for significance: ", sd.qualityMeasureMinimum)
+sd.qualityMeasureMinimum = 0.01
 
 #do the actual run and print the findings
 sd.run()
 print(sd.asDataFrame())
+
+#set up the plot and plot the age distribution on the entire dataset
+model = sd.getModel(0, relative=True)
+model.plot()
+plt.xlabel('age')
+plt.savefig('age-distribution.pdf')

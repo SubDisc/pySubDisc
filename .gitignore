@@ -5,3 +5,5 @@
 /tests/__pycache__
 /dist
 /.ipynb_checkpoints
+.DS_Store
+examples/*.pdf

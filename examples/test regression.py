@@ -5,8 +5,8 @@ import pandas
 data = pandas.read_csv('adult.txt')
 sd = pysubdisc.singleNumericTarget(data, 'age') #using age as a (somewhat useless) target
 sd.searchDepth = 1
-sd.numericStrategy = 'BEST'
-sd.qualityMeasure = 'EXPLAINED VARIANCE'
+sd.numericStrategy = 'NUMERIC_BEST'
+sd.qualityMeasure = 'EXPLAINED_VARIANCE'
 sd.qualityMeasureMinimum = 0.01
 
 #do the actual run and print the findings

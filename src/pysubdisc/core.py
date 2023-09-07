@@ -85,18 +85,22 @@ class SubgroupDiscovery(object):
       self._table.getColumn(c).setType(t)
 
   def makeColumnsBinary(self, columns):
+    """Try to change the type of one or more columns to binary."""
     from nl.liacs.subdisc import AttributeType
     self._setColumnType(columns, AttributeType.BINARY)
 
   def makeColumnsNominal(self, columns):
+    """Try to change the type of one or more columns to nominal."""
     from nl.liacs.subdisc import AttributeType
     self._setColumnType(columns, AttributeType.NOMINAL)
 
   def makeColumnsNumeric(self, columns):
+    """Try to change the type of one or more columns to numeric."""
     from nl.liacs.subdisc import AttributeType
     self._setColumnType(columns, AttributeType.NUMERIC)
 
   def describeColumns(self):
+    """Describe the columns/attributes in the table. Returns a DataFrame."""
     import pandas as pd
     L = [ [ str(column.getName()), column.getCardinality(), str(column.getType()) ] for column in self._table.getColumns() ]
 
@@ -104,6 +108,7 @@ class SubgroupDiscovery(object):
     return df
 
   def describeSearchParameters(self):
+    """Describe the current search parameters. Returns a string."""
     sp = self._createSearchParametersObject()
     return str(self._targetConcept) + str(sp)
 
@@ -125,6 +130,7 @@ class SubgroupDiscovery(object):
       raise RuntimeError("This function is only available after a succesfull call of run()")
 
   def run(self, verbose=True):
+    """Run the subgroup discovery."""
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
     from nl.liacs.subdisc import Process
@@ -133,10 +139,12 @@ class SubgroupDiscovery(object):
     self._sd = sd
 
   def asDataFrame(self):
+    """Return the discovered subgroups as a DataFrame."""
     self._ensurePostRun()
     return generateResultDataFrame(self._sd, self._targetConcept.getTargetType())
 
   def getSubgroupMembers(self, index):
+    """Return the members of a discovered subgroup as a boolean Series."""
     self._ensurePostRun()
     import pandas
     subgroups = list(self._sd.getResult())

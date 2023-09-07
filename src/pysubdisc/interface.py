@@ -2,8 +2,7 @@ from .java import ensureJVMStarted
 from .core import SubgroupDiscovery
 
 def createTableFromDataFrame(data):
-  """Create subdisc Table from pandas DataFrame.
-  """
+  """Create subdisc Table from pandas DataFrame."""
   # TODO: Consider adding a 'dtype' keyword arg to override data types (cf pd.read_csv)
   # TODO: Also, consider an option to convert integer columns to nominals (sklearn data sets use this) (pd.api.types.is_integer_dtype)
   from nl.liacs.subdisc import Column
@@ -41,6 +40,12 @@ def createTableFromDataFrame(data):
 
 # TODO: Reduce code duplication between these factory functions
 def singleNominalTarget(data, targetColumn, targetValue):
+  """Create subdisc interface of type 'single nominal'.
+     Arguments:
+     data -- the data as a DataFrame
+     targetColumn -- the name/index of the target (nominal) column
+     targetValue -- the target value
+  """
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType, Table
@@ -69,6 +74,11 @@ def singleNominalTarget(data, targetColumn, targetValue):
   return sd
 
 def singleNumericTarget(data, targetColumn):
+  """Create subdisc interface of type 'single numeric'.
+     Arguments:
+     data -- the data as a DataFrame
+     targetColumn -- the name/index of the target (numeric) column
+  """
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType, Table
@@ -96,6 +106,12 @@ def singleNumericTarget(data, targetColumn):
   return sd
 
 def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
+  """Create subdisc interface of type 'double regression'.
+     Arguments:
+     data -- the data as a DataFrame
+     primaryTargetColumn -- the name/index of the primary target (numeric)
+     secondaryTargetColumn -- the name/index of the secondary target (numeric)
+  """
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType, Table
@@ -125,6 +141,12 @@ def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
   return sd
 
 def doubleBinaryTarget(data, primaryTargetColumn, secondaryTargetColumn):
+  """Create subdisc interface of type 'double binary'.
+     Arguments:
+     data -- the data as a DataFrame
+     primaryTargetColumn -- the name/index of the primary target (binary)
+     secondaryTargetColumn -- the name/index of the secondary target (binary)
+  """
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType, Table

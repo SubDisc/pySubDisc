@@ -180,6 +180,8 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
                                       statistics.getSubgroupSum(),
                                       statistics.getSubgroupSumSquaredDeviations(),
                                       pdf)
+    elif targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
+      qualityMeasure = None
     else:
       raise NotImplementedError()
 

@@ -96,6 +96,13 @@ class SubgroupDiscovery(object):
     from nl.liacs.subdisc import AttributeType
     self._setColumnType(columns, AttributeType.NUMERIC)
 
+  def describeColumns(self):
+    import pandas as pd
+    L = [ [ str(column.getName()), column.getCardinality(), str(column.getType()) ] for column in self._table.getColumns() ]
+
+    df = pd.DataFrame(L, columns=['Attribute', 'Cardinality', 'Type'])
+    return df
+
   def getSearchParameterDescription(self):
     sp = self._createSearchParametersObject()
     return str(self._targetConcept) + str(sp)

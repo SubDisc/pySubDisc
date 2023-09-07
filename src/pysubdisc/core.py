@@ -103,7 +103,7 @@ class SubgroupDiscovery(object):
     df = pd.DataFrame(L, columns=['Attribute', 'Cardinality', 'Type'])
     return df
 
-  def getSearchParameterDescription(self):
+  def describeSearchParameters(self):
     sp = self._createSearchParametersObject()
     return str(self._targetConcept) + str(sp)
 

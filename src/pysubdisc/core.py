@@ -78,6 +78,24 @@ class SubgroupDiscovery(object):
 
     return sp
 
+  def _setColumnType(self, columns, t):
+    if isinstance(columns, str) or not hasattr(columns, '__iter__'):
+      columns = [ columns ]
+    for c in columns:
+      self._table.getColumn(c).setType(t)
+
+  def makeColumnsBinary(self, columns):
+    from nl.liacs.subdisc import AttributeType
+    self._setColumnType(columns, AttributeType.BINARY)
+
+  def makeColumnsNominal(self, columns):
+    from nl.liacs.subdisc import AttributeType
+    self._setColumnType(columns, AttributeType.NOMINAL)
+
+  def makeColumnsNumeric(self, columns):
+    from nl.liacs.subdisc import AttributeType
+    self._setColumnType(columns, AttributeType.NUMERIC)
+
   def getSearchParameterDescription(self):
     sp = self._createSearchParametersObject()
     return str(self._targetConcept) + str(sp)

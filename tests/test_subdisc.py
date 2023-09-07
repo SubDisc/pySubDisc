@@ -24,9 +24,11 @@ def test_enums():
   _ = TargetType.SINGLE_NOMINAL
   _ = TargetType.SINGLE_NUMERIC
   _ = TargetType.DOUBLE_REGRESSION
+  _ = TargetType.DOUBLE_BINARY
   _ = QM.CORTANA_QUALITY
   _ = QM.Z_SCORE
   _ = QM.REGRESSION_SSD_COMPLEMENT
+  _ = QM.RELATIVE_WRACC
   _ = SearchStrategy.BEAM
   _ = NumericStrategy.NUMERIC_BINS
   _ = NumericOperatorSetting.NORMAL

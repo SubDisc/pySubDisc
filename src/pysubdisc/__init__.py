@@ -1,6 +1,12 @@
-from .interface import singleNominalTarget, singleNumericTarget, doubleRegressionTarget
+from .interface import singleNominalTarget
+from .interface import singleNumericTarget
+from .interface import doubleRegressionTarget
+from .interface import doubleBinaryTarget
 
-__all__ = [ singleNominalTarget, singleNumericTarget, doubleRegressionTarget ]
+__all__ = [ singleNominalTarget,
+            singleNumericTarget,
+            doubleRegressionTarget,
+            doubleBinaryTarget ]
 
 
 # Set package version

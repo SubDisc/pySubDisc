@@ -182,6 +182,8 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
                                       pdf)
     elif targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
       qualityMeasure = None
+    elif targetConcept.getTargetType() == TargetType.DOUBLE_BINARY:
+      qualityMeasure = None
     else:
       raise NotImplementedError()
 

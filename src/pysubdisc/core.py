@@ -13,6 +13,8 @@ class SubgroupDiscovery(object):
     return str(self._targetConcept.getTargetType())
 
   def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=1):
+    # TODO: Clean this up
+    # TODO: Consider setting number of threads to number of cores
     # use inspect to avoid duplicating the argument list
     from inspect import signature
     sig = signature(self._initSearchParameters)
@@ -123,6 +125,8 @@ class SubgroupDiscovery(object):
     return threshold
 
   def getBaseModel(self, verbose=True):
+    # TODO: For regression/correlation types, consider also returning the
+    # base regression model or correlation here (in some form).
     return self.getModel(None, includeBase=True, verbose=verbose)
 
   def _ensurePostRun(self):

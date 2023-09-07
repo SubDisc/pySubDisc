@@ -61,6 +61,8 @@ def singleNominalTarget(data, targetColumn, targetValue):
 
   # can use column index or column name
   target = data.getColumn(targetColumn)
+  if target is None:
+    raise ValueError(f"Unknown column '{targetColumn}'")
 
   targetConcept = TargetConcept()
   targetConcept.setTargetType(targetType)
@@ -94,6 +96,8 @@ def singleNumericTarget(data, targetColumn):
 
   # can use column index or column name
   target = data.getColumn(targetColumn)
+  if target is None:
+    raise ValueError(f"Unknown column '{targetColumn}'")
 
   targetConcept = TargetConcept()
   targetConcept.setTargetType(targetType)
@@ -128,6 +132,10 @@ def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
   # can use column index or column name
   primaryTarget = data.getColumn(primaryTargetColumn)
   secondaryTarget = data.getColumn(secondaryTargetColumn)
+  if primaryTarget is None:
+    raise ValueError(f"Unknown column '{primaryTargetColumn}'")
+  if secondaryTarget is None:
+    raise ValueError(f"Unknown column '{secondaryTargetColumn}'")
 
   targetConcept = TargetConcept()
   targetConcept.setTargetType(targetType)
@@ -163,6 +171,10 @@ def doubleBinaryTarget(data, primaryTargetColumn, secondaryTargetColumn):
   # can use column index or column name
   primaryTarget = data.getColumn(primaryTargetColumn)
   secondaryTarget = data.getColumn(secondaryTargetColumn)
+  if primaryTarget is None:
+    raise ValueError(f"Unknown column '{primaryTargetColumn}'")
+  if secondaryTarget is None:
+    raise ValueError(f"Unknown column '{secondaryTargetColumn}'")
 
   targetConcept = TargetConcept()
   targetConcept.setTargetType(targetType)

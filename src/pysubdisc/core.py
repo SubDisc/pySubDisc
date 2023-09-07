@@ -133,8 +133,37 @@ class SubgroupDiscovery(object):
     if not self._runCalled:
       raise RuntimeError("This function is only available after a succesfull call of run()")
 
+  def _checkColumnTypes(self):
+    from nl.liacs.subdisc import TargetType, AttributeType
+    if self._targetConcept.getTargetType() == TargetType.SINGLE_NOMINAL:
+      primaryTarget = self._targetConcept.getPrimaryTarget()
+      if primaryTarget.getType() != AttributeType.NOMINAL:
+        raise TypeError("targetColumn is not nominal")
+    elif self._targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
+      primaryTarget = self._targetConcept.getPrimaryTarget()
+      if primaryTarget.getType() != AttributeType.NUMERIC:
+        raise TypeError("targetColumn is not numeric")
+    elif self._targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
+      primaryTarget = self._targetConcept.getPrimaryTarget()
+      secondaryTarget = self._targetConcept.getSecondaryTarget()
+      if primaryTarget.getType() != AttributeType.NUMERIC:
+        raise TypeError("primaryTargetColumn is not numeric")
+      if secondaryTarget.getType() != AttributeType.NUMERIC:
+        raise TypeError("secondaryTargetColumn is not numeric")
+    elif self._targetConcept.getTargetType() == TargetType.DOUBLE_BINARY:
+      primaryTarget = self._targetConcept.getPrimaryTarget()
+      secondaryTarget = self._targetConcept.getSecondaryTarget()
+      if primaryTarget.getType() != AttributeType.BINARY:
+        raise TypeError("primaryTargetColumn is not binary")
+      if secondaryTarget.getType() != AttributeType.BINARY:
+        raise TypeError("secondaryTargetColumn is not binary")
+    else:
+      # Don't block not yet implemented target types here
+      pass
+
   def run(self, verbose=True):
     """Run the subgroup discovery."""
+    self._checkColumnTypes()
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
     from nl.liacs.subdisc import Process

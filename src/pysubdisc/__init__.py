@@ -2,11 +2,13 @@ from .interface import singleNominalTarget
 from .interface import singleNumericTarget
 from .interface import doubleRegressionTarget
 from .interface import doubleBinaryTarget
+from .interface import doubleCorrelationTarget
 
 __all__ = [ singleNominalTarget,
             singleNumericTarget,
             doubleRegressionTarget,
-            doubleBinaryTarget ]
+            doubleBinaryTarget,
+            doubleCorrelationTarget ]
 
 
 # Set package version

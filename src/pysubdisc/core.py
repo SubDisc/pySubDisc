@@ -144,7 +144,8 @@ class SubgroupDiscovery(object):
       primaryTarget = self._targetConcept.getPrimaryTarget()
       if primaryTarget.getType() != AttributeType.NUMERIC:
         raise TypeError("targetColumn is not numeric")
-    elif self._targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
+    elif self._targetConcept.getTargetType() in \
+         ( TargetType.DOUBLE_REGRESSION, TargetType.DOUBLE_CORRELATION ):
       primaryTarget = self._targetConcept.getPrimaryTarget()
       secondaryTarget = self._targetConcept.getSecondaryTarget()
       if primaryTarget.getType() != AttributeType.NUMERIC:
@@ -197,8 +198,9 @@ class SubgroupDiscovery(object):
     from nl.liacs.subdisc import TargetType
     if self._targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
       return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, sd, index, includeBase=includeBase, verbose=verbose, **kwargs)
-    if self._targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
-      return redirectSystemOutErr(getModelDoubleRegression, self._targetConcept, sd, index, dfIndex=self._index, includeBase=includeBase, verbose=verbose, **kwargs)
+    if self._targetConcept.getTargetType() in \
+         ( TargetType.DOUBLE_REGRESSION, TargetType.DOUBLE_CORRELATION ):
+      return redirectSystemOutErr(getModelDoubleNumeric, self._targetConcept, sd, index, dfIndex=self._index, includeBase=includeBase, verbose=verbose, **kwargs)
     else:
       raise NotImplementedError("getModel() is not implemented for this target type")
 
@@ -250,6 +252,8 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
     elif targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION:
       qualityMeasure = None
     elif targetConcept.getTargetType() == TargetType.DOUBLE_BINARY:
+      qualityMeasure = None
+    elif targetConcept.getTargetType() == TargetType.DOUBLE_CORRELATION:
       qualityMeasure = None
     else:
       raise NotImplementedError()
@@ -315,14 +319,17 @@ def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=T
 
   return df
 
-def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase=True):
+def getModelDoubleNumeric(targetConcept, sd, index, dfIndex=None, includeBase=True):
   from nl.liacs.subdisc import TargetType, QM, RegressionMeasure
   from pandas import DataFrame
   import numpy as np
 
-  assert targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION
+  assert targetConcept.getTargetType() in \
+         ( TargetType.DOUBLE_REGRESSION, TargetType.DOUBLE_CORRELATION )
   if not hasattr(index, '__iter__'):
     index = [ index ]
+  
+  regression = (targetConcept.getTargetType() == TargetType.DOUBLE_REGRESSION)
 
   # Create a dataframe with one row per sample.
   # Columns: 'x', the primary target column
@@ -334,11 +341,13 @@ def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase
 
 
   if includeBase:
-    columns = [ 'x', 'y base', 'pred base' ]
-    baseCols = 3
+    if regression:
+      columns = [ 'x', 'y base', 'pred base' ]
+    else:
+      columns = [ 'x', 'y base' ]
   else:
     columns = [ 'x' ]
-    baseCols = 1
+  baseCols = len(columns)
 
   L = []
   subgroups = None
@@ -348,15 +357,18 @@ def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase
       subgroups = list(sd.getResult())
     s = subgroups[i]
     L.append(s)
-    columns.extend([f'y {i}', f'pred {i}'])
+    columns.append(f'y {i}')
+    if regression:
+      columns.append(f'pred {i}')
 
   xcoords = np.array(targetConcept.getPrimaryTarget().getFloats())
   nrRows = xcoords.shape[0]
 
-  # REGRESSION_SSD_COMPLEMENT is the default here, but doesn't really matter
-  RM = RegressionMeasure(QM.REGRESSION_SSD_COMPLEMENT, targetConcept.getPrimaryTarget(), targetConcept.getSecondaryTarget())
-  slope = RM.getSlope()
-  intercept = RM.getIntercept()
+  if regression:
+    # REGRESSION_SSD_COMPLEMENT is the default here, but doesn't really matter
+    RM = RegressionMeasure(QM.REGRESSION_SSD_COMPLEMENT, targetConcept.getPrimaryTarget(), targetConcept.getSecondaryTarget())
+    slope = RM.getSlope()
+    intercept = RM.getIntercept()
 
   if dfIndex is not None:
     rows = range(nrRows)
@@ -368,17 +380,22 @@ def getModelDoubleRegression(targetConcept, sd, index, dfIndex=None, includeBase
   data[:, 0] = xcoords
   if includeBase:
     data[:, 1] = targetConcept.getSecondaryTarget().getFloats()
-    data[:, 2] = intercept + slope * data[:, 0]
+    if regression:
+      data[:, 2] = intercept + slope * data[:, 0]
+
+  f = 2 if regression else 1
 
   for j, s in enumerate(L):
     members = s.getMembers()
-    slope = s.getSecondaryStatistic()
-    intercept = s.getTertiaryStatistic()
-    data[:, 2*j+baseCols] = targetConcept.getSecondaryTarget().getFloats()
-    data[:, 2*j+baseCols+1] = intercept + slope * data[:, 0]
+    if regression:
+      slope = s.getSecondaryStatistic()
+      intercept = s.getTertiaryStatistic()
+    data[:, f*j+baseCols] = targetConcept.getSecondaryTarget().getFloats()
+    if regression:
+      data[:, f*j+baseCols+1] = intercept + slope * data[:, 0]
     for i in range(data.shape[0]):
       if not members.get(i):
-        data[i, 2*j+baseCols] = np.NaN
+        data[i, f*j+baseCols] = np.NaN
 
   df = DataFrame(data=data, index=rows, columns=columns, copy=True)
 

@@ -12,7 +12,7 @@ class SubgroupDiscovery(object):
   def targetType(self):
     return str(self._targetConcept.getTargetType())
 
-  def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=1):
+  def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=None):
     # TODO: Clean this up
     # TODO: Consider setting number of threads to number of cores
     # use inspect to avoid duplicating the argument list
@@ -30,6 +30,14 @@ class SubgroupDiscovery(object):
       else:
         raise ValueError("Invalid qualityMeasure")
     self.qualityMeasureMinimum = float(str(qualityMeasure.MEASURE_DEFAULT))
+
+    if nrThreads is None:
+      import os
+      nrThreads = os.cpu_count()
+      if nrThreads is not None:
+        self.nrThreads = nrThreads
+      else:
+        self.nrThreads = 1
 
   def _createSearchParametersObject(self):
     from nl.liacs.subdisc import SearchParameters

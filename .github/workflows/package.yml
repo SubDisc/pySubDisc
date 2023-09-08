@@ -12,12 +12,17 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+
+    - name: Find SubDisc commit
+      run: |
+        echo "subdisc_commit=$(grep '^SubDisc' src/pysubdisc/VERSION | cut -d' ' -f 2)" >> $GITHUB_ENV
 
     - name: Checkout SubDisc
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: SubDisc/SubDisc
+        ref: ${{ env.subdisc_commit }}
         path: ext/SubDisc
         # We need to fetch the full history because the commit count is used
         # to identify the SubDisc version.
@@ -38,17 +43,20 @@ jobs:
       run: mvn package
       working-directory: ./ext/SubDisc
 
+    - name: Get SubDisc revision
+      run: |
+        echo "subdisc_revision=$(git -C ext/SubDisc rev-list HEAD --count)" >> $GITHUB_ENV
+
     - name: Copy jar
       run: |
         mkdir -p src/pysubdisc/jars
-        cp ext/SubDisc/target/subdisc-gui.jar src/pysubdisc/jars
+        cp ext/SubDisc/target/subdisc-gui.jar src/pysubdisc/jars/subdisc-gui-r${{ env.subdisc_revision }}.jar
 
     - name: Add jar version info
       run: |
-        echo $(cat src/pysubdisc/VERSION)+jar$(git -C ext/SubDisc rev-list HEAD --count) > VERSION.tag
-        mv VERSION.tag src/pysubdisc/VERSION
-        echo "pysubdisc_version=$(cat src/pysubdisc/VERSION)" >> $GITHUB_ENV
-        echo "JAR version: $(cat src/pysubdisc/VERSION)"
+        sed -i -e s/9999/${{ env.subdisc_revision }}/ src/pysubdisc/VERSION
+        echo "pysubdisc_version=$(grep '^pySubDisc' src/pysubdisc/VERSION | cut -d' ' -f 2)" >> $GITHUB_ENV
+        echo "Using SubDisc commit ${{ env.subdisc_commit }}, revision ${{ env.subdisc_revision }}"
 
     - name: Install dependencies
       run: |
@@ -65,9 +73,28 @@ jobs:
       # The pytest faulthandler interferes with jpype
       run: pytest -p no:faulthandler
 
-    - name: Upload Artifact
+    - name: Set up conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-activate-base: true
+
+    - name: Build conda package
+      run: |
+        conda install -y conda-build conda-verify
+        conda build conda
+
+    - name: Upload wheel
       uses: actions/upload-artifact@v3
       with:
         name: pysubdisc-wheel
-        path: dist/pysubdisc-${{ env.pysubdisc_version }}-py3-none-any.whl
+        path: |
+          dist/pysubdisc-${{ env.pysubdisc_version }}-py3-none-any.whl
+          dist/pysubdisc-${{ env.pysubdisc_version }}.tar.gz
+        retention-days: 2
+
+    - name: Upload conda package
+      uses: actions/upload-artifact@v3
+      with:
+        name: pysubdisc-conda
+        path: /usr/share/miniconda/conda-bld/noarch/pysubdisc-${{ env.pysubdisc_version }}-py_*.tar.bz2
         retention-days: 2

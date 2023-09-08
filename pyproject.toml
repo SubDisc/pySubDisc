@@ -28,7 +28,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "src/pysubdisc/VERSION"
-pattern = "(?P<version>.+)"
+pattern = "^pySubDisc (?P<version>.+)"
 
 [tool.hatch.build]
 ignore-vcs = true

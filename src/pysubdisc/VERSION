@@ -1,1 +1,9 @@
-0.0.1
+pySubDisc 0.1.9999
+SubDisc 01b809f456a403d8b8988dd003fe3a0798b3d673
+
+This file controls the pySubDisc package versioning.
+The first line, starting with pySubDisc, gives the package version. The 9999
+will be replaced by the SubDisc revision number while setting up the build.
+The second line, starting with SubDisc, determines the git commit that will
+get packaged along with pySubDisc.
+

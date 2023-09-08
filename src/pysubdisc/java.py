@@ -1,15 +1,23 @@
 def extraClassPath():
   import os
-  # TODO: de-hardcode this name
-  jar = 'subdisc-gui.jar'
+  import re
+  from . import __version__
+  v = re.match("^[0-9]+\.[0-9]+\.(?P<sd>[0-9]+)$", __version__)
+  if v is None:
+    raise RuntimeError("Invalid package version")
+  v = v.group('sd')
+  if v == '9999':
+    jar = 'subdisc-gui.jar'
+  else:
+    jar = f'subdisc-gui-r{v}.jar'
   jar = os.path.join(os.path.dirname(__file__), 'jars', jar)
-  return [jar]
+  return jar
 
 def ensureJVMStarted():
   import jpype
   import jpype.imports
   if not jpype.isJVMStarted():
-    jpype.startJVM(classpath=extraClassPath())
+    jpype.startJVM(classpath=[extraClassPath()])
 
   # Try to import a SubDisc class to raise an exception early if loading
   # SubDisc jar failed

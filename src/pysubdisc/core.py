@@ -84,7 +84,8 @@ class SubgroupDiscovery(object):
     if isinstance(columns, str) or not hasattr(columns, '__iter__'):
       columns = [ columns ]
     for c in columns:
-      self._table.getColumn(c).setType(t)
+      if not self._table.getColumn(c).setType(t):
+        raise RuntimeError(f"Failed to change type of column '{c}'")
 
   def makeColumnsBinary(self, columns):
     """Try to change the type of one or more columns to binary."""

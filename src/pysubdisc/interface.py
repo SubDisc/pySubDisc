@@ -225,3 +225,46 @@ def doubleCorrelationTarget(data, primaryTargetColumn, secondaryTargetColumn):
   sd._initSearchParameters(qualityMeasure = 'CORRELATION_R', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd
+
+def multiNumericTarget(data, targetColumns):
+  """Create subdisc interface of type 'multi numeric'.
+     Arguments:
+     data -- the data as a DataFrame
+     targetColumns -- list of name/index of the target columns (numeric)
+  """
+  ensureJVMStarted()
+
+  from nl.liacs.subdisc import TargetConcept, TargetType, Table
+  from math import ceil
+  from java.util import ArrayList
+
+  if not isinstance(data, Table):
+    index = data.index
+    data = createTableFromDataFrame(data)
+  else:
+    index = pd.RangeIndex(data.getNrRows())
+
+  targetType = TargetType.MULTI_NUMERIC
+
+  L = ArrayList()
+  for c in targetColumns:
+    # can use column index or column name
+
+    target = data.getColumn(c)
+    if target is None:
+      raise ValueError(f"Unknown column '{c}'")
+    L.add(target)
+
+  if L.size() < 2:
+    raise ValueError("At least 2 columns must be selected")
+
+  targetConcept = TargetConcept()
+  targetConcept.setTargetType(targetType)
+  targetConcept.setMultiTargets(L)
+
+  sd = SubgroupDiscovery(targetConcept, data, index)
+
+  # TODO: This qualityMeasure is only available for 2D
+  sd._initSearchParameters(qualityMeasure = 'SQUARED_HELLINGER_2D', minimumCoverage = ceil(0.1 * data.getNrRows()))
+
+  return sd

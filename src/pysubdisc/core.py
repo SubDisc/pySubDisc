@@ -167,6 +167,10 @@ class SubgroupDiscovery(object):
         raise TypeError("primaryTargetColumn is not binary")
       if secondaryTarget.getType() != AttributeType.BINARY:
         raise TypeError("secondaryTargetColumn is not binary")
+    elif self._targetConcept.getTargetType() == TargetType.MULTI_NUMERIC:
+      for c in self._targetConcept.getMultiTargets():
+        if c.getType() != AttributeType.NUMERIC:
+          raise TypeError(f"Target column '{c.getName()}' is not numeric")
     else:
       # Don't block not yet implemented target types here
       pass
@@ -263,6 +267,8 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
       qualityMeasure = None
     elif targetConcept.getTargetType() == TargetType.DOUBLE_CORRELATION:
       qualityMeasure = None
+    elif targetConcept.getTargetType() == TargetType.MULTI_NUMERIC:
+      raise NotImplementedError()
     else:
       raise NotImplementedError()
 

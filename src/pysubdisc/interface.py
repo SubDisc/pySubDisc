@@ -264,7 +264,12 @@ def multiNumericTarget(data, targetColumns):
 
   sd = SubgroupDiscovery(targetConcept, data, index)
 
-  # TODO: This qualityMeasure is only available for 2D
-  sd._initSearchParameters(qualityMeasure = 'SQUARED_HELLINGER_2D', minimumCoverage = ceil(0.1 * data.getNrRows()))
+  if L.size() == 2:
+    # This qualityMeasure is only available for 2D
+    qm = 'SQUARED_HELLINGER_2D'
+  else:
+    qm = 'L2'
+
+  sd._initSearchParameters(qualityMeasure = qm, minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd

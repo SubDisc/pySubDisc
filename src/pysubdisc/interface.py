@@ -186,3 +186,90 @@ def doubleBinaryTarget(data, primaryTargetColumn, secondaryTargetColumn):
   sd._initSearchParameters(qualityMeasure = 'RELATIVE_WRACC', minimumCoverage = ceil(0.1 * data.getNrRows()))
 
   return sd
+
+def doubleCorrelationTarget(data, primaryTargetColumn, secondaryTargetColumn):
+  """Create subdisc interface of type 'double correlation'.
+     Arguments:
+     data -- the data as a DataFrame
+     primaryTargetColumn -- the name/index of the primary target (numeric)
+     secondaryTargetColumn -- the name/index of the secondary target (numeric)
+  """
+  ensureJVMStarted()
+
+  from nl.liacs.subdisc import TargetConcept, TargetType, Table
+  from math import ceil
+
+  if not isinstance(data, Table):
+    index = data.index
+    data = createTableFromDataFrame(data)
+  else:
+    index = pd.RangeIndex(data.getNrRows())
+
+  targetType = TargetType.DOUBLE_CORRELATION
+
+  # can use column index or column name
+  primaryTarget = data.getColumn(primaryTargetColumn)
+  secondaryTarget = data.getColumn(secondaryTargetColumn)
+  if primaryTarget is None:
+    raise ValueError(f"Unknown column '{primaryTargetColumn}'")
+  if secondaryTarget is None:
+    raise ValueError(f"Unknown column '{secondaryTargetColumn}'")
+
+  targetConcept = TargetConcept()
+  targetConcept.setTargetType(targetType)
+  targetConcept.setPrimaryTarget(primaryTarget)
+  targetConcept.setSecondaryTarget(secondaryTarget)
+
+  sd = SubgroupDiscovery(targetConcept, data, index)
+
+  sd._initSearchParameters(qualityMeasure = 'CORRELATION_R', minimumCoverage = ceil(0.1 * data.getNrRows()))
+
+  return sd
+
+def multiNumericTarget(data, targetColumns):
+  """Create subdisc interface of type 'multi numeric'.
+     Arguments:
+     data -- the data as a DataFrame
+     targetColumns -- list of name/index of the target columns (numeric)
+  """
+  ensureJVMStarted()
+
+  from nl.liacs.subdisc import TargetConcept, TargetType, Table
+  from math import ceil
+  from java.util import ArrayList
+
+  if not isinstance(data, Table):
+    index = data.index
+    data = createTableFromDataFrame(data)
+  else:
+    index = pd.RangeIndex(data.getNrRows())
+
+  targetType = TargetType.MULTI_NUMERIC
+
+  L = ArrayList()
+  for c in targetColumns:
+    # can use column index or column name
+
+    target = data.getColumn(c)
+    if target is None:
+      raise ValueError(f"Unknown column '{c}'")
+    L.add(target)
+
+  if L.size() < 2:
+    raise ValueError("At least 2 columns must be selected")
+
+  targetConcept = TargetConcept()
+  targetConcept.setTargetType(targetType)
+  targetConcept.setMultiTargets(L)
+
+  sd = SubgroupDiscovery(targetConcept, data, index)
+
+  if L.size() == 2:
+    # This qualityMeasure is only available for 2D
+    qm = 'SQUARED_HELLINGER_2D'
+  else:
+    qm = 'L2'
+
+  sd._initSearchParameters(qualityMeasure = qm, minimumCoverage = ceil(0.1 * data.getNrRows()))
+
+  return sd

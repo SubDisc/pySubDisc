@@ -62,6 +62,7 @@ SINGLE_NOMINAL_OUTPUT = \
 
 def test_single_nominal(adult_data):
   sd = pysubdisc.singleNominalTarget(adult_data, 'target', 'gr50K')
+  sd.nrThreads = 1
   paramdesc = sd.describeSearchParameters()
   assert paramdesc == SINGLE_NOMINAL_PARAMS
   sd.run(verbose=False)
@@ -128,6 +129,7 @@ SINGLE_NUMERIC_OUTPUT = \
 
 def test_single_numeric(adult_data):
   sd = pysubdisc.singleNumericTarget(adult_data, 'age')
+  sd.nrThreads = 1
   paramdesc = sd.describeSearchParameters()
   assert paramdesc == SINGLE_NUMERIC_PARAMS
   sd.run(verbose=False)
@@ -183,6 +185,7 @@ DOUBLE_REGRESSION_OUTPUT = \
 def test_double_regression(adult_data):
   sd = pysubdisc.doubleRegressionTarget(adult_data, 'age', 'hours-per-week')
   sd.qualityMeasureMinimum = 3.0
+  sd.nrThreads = 1
   paramdesc = sd.describeSearchParameters()
   assert paramdesc == DOUBLE_REGRESSION_PARAMS
   sd.run(verbose=False)

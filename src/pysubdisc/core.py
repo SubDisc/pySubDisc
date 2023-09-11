@@ -140,7 +140,7 @@ class SubgroupDiscovery(object):
 
   def _ensurePostRun(self):
     if not self._runCalled:
-      raise RuntimeError("This function is only available after a succesfull call of run()")
+      raise RuntimeError("This function is only available after a successful call of run()")
 
   def _checkColumnTypes(self):
     from nl.liacs.subdisc import TargetType, AttributeType

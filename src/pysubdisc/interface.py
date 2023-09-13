@@ -8,6 +8,7 @@ def loadDataFrame(data):
   from nl.liacs.subdisc import Column
   from nl.liacs.subdisc import AttributeType
   from nl.liacs.subdisc import Table as sdTable
+  from jpype import JArray, JString, JBoolean, JFloat
   from java.io import File
   import pandas as pd
   from .core import Table
@@ -23,16 +24,19 @@ def loadDataFrame(data):
     if pd.api.types.is_string_dtype(data.dtypes[name]):
       atype = AttributeType.NOMINAL
       ctype = str
+      jtype = JString
     elif pd.api.types.is_bool_dtype(data.dtypes[name]):
       atype = AttributeType.BINARY
       ctype = bool
+      jtype = JBoolean
     elif pd.api.types.is_numeric_dtype(data.dtypes[name]):
       atype = AttributeType.NUMERIC
       ctype = float
+      jtype = JFloat
     else:
       raise ValueError(f"""Unsupported column type '{data.dtypes[name]}' for column '{name}'""")
     column = Column(name, name, atype, i, nrows)
-    column.setData(data[name].set_axis(index).astype(ctype))
+    column.setData(JArray(jtype)@data[name].set_axis(index).astype(ctype))
     columns.add(column)
 
   table.update()

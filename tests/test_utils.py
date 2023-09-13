@@ -87,3 +87,19 @@ def test_view(adult_data):
   members = sd.getSubgroupMembers(0)
   assert members.sum() == 84
   assert all(members.index == view.index)
+
+def test_selection(adult_data):
+  view = adult_data[adult_data['education'] == 'Bachelors']
+  sd = pysubdisc.singleNominalTarget(view, 'target', 'gr50K')
+  sd.run(verbose=False)
+  df = sd.asDataFrame()
+
+  table = pysubdisc.loadDataFrame(adult_data)
+  table.setSelection(adult_data['education'] == 'Bachelors')
+  sd = pysubdisc.singleNominalTarget(table, 'target', 'gr50K')
+  assert sd.minimumCoverage == 17
+
+  sd.run(verbose=False)
+
+  df2 = sd.asDataFrame()
+  assert df.equals(df2)

@@ -5,9 +5,13 @@ class Table(object):
     ensureJVMStarted()
     self._table = table
     self._index = index
+    self._selection = None
+    self._selectionIndex = None
 
   def __str__(self):
     t = f"{self._table.getNrRows()}x{self._table.getNrColumns()} SubDisc table"
+    if self._selectionIndex is not None:
+      t = t + f" with {len(self._selectionIndex)} rows selected"
     return t
 
   def _setColumnType(self, columns, t):
@@ -16,6 +20,12 @@ class Table(object):
     for c in columns:
       if not self._table.getColumn(c).setType(t):
         raise RuntimeError(f"Failed to change type of column '{c}'")
+
+  def _setColumnEnabled(self, columns, t):
+    if isinstance(columns, str) or not hasattr(columns, '__iter__'):
+      columns = [ columns ]
+    for c in columns:
+      self._table.getColumn(c).setIsEnabled(t)
 
   def makeColumnsBinary(self, columns):
     """Try to change the type of one or more columns to binary."""
@@ -32,15 +42,38 @@ class Table(object):
     from nl.liacs.subdisc import AttributeType
     self._setColumnType(columns, AttributeType.NUMERIC)
 
+  def enableColumns(self, columns):
+    """Enable one or more columns."""
+    self._setColumnEnabled(columns, True)
+
+  def disableColumns(self, columns):
+    """Disable one or more columns."""
+    self._setColumnEnabled(columns, False)
+
   def describeColumns(self):
     """Describe the columns/attributes in the table. Returns a DataFrame."""
     import pandas as pd
-    L = [ [ str(column.getName()), column.getCardinality(), str(column.getType()) ] for column in self._table.getColumns() ]
+    L = [ [ str(column.getName()), column.getCardinality(), str(column.getType()), bool(column.getIsEnabled()) ] for column in self._table.getColumns() ]
 
-    df = pd.DataFrame(L, columns=['Attribute', 'Cardinality', 'Type'])
+    df = pd.DataFrame(L, columns=['Attribute', 'Cardinality', 'Type', 'Enabled'])
     return df
 
+  def setSelection(self, subset):
+    """Set selection of rows to use for subgroup discovery."""
+    if not subset.index.equals(self._index):
+      raise IndexError("Index of subset doesn't match data index")
+    from java.util import BitSet
+    import pandas as pd
+    nrows = self._table.getNrRows()
 
+    # re-index this to a standard RangeIndex to match the java Table
+    d = subset.set_axis(pd.RangeIndex(nrows))
+    self._selection = BitSet(nrows)
+    for i in range(nrows):
+      if d[i]:
+        self._selection.set(i)
+
+    self._selectionIndex = self._index[subset]
 
 class SubgroupDiscovery(object):
   def __init__(self, targetConcept, table):
@@ -48,13 +81,15 @@ class SubgroupDiscovery(object):
     self._targetConcept = targetConcept
     self._table = table._table
     self._index = table._index
+    self._selection = table._selection
+    self._selectionIndex = table._selectionIndex
     self._runCalled = False
 
   @property
   def targetType(self):
     return str(self._targetConcept.getTargetType())
 
-  def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=2, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=None):
+  def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=None, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=None):
     # TODO: Clean this up
     # TODO: Consider setting number of threads to number of cores
     # use inspect to avoid duplicating the argument list
@@ -80,6 +115,13 @@ class SubgroupDiscovery(object):
         self.nrThreads = nrThreads
       else:
         self.nrThreads = 1
+
+    if minimumCoverage is None:
+      from math import ceil
+      if self._selectionIndex is not None:
+        self.minimumCoverage = ceil(0.1 * len(self._selectionIndex))
+      else:
+        self.minimumCoverage = ceil(0.1 * self._table.getNrRows())
 
   def _createSearchParametersObject(self):
     from nl.liacs.subdisc import SearchParameters
@@ -138,7 +180,7 @@ class SubgroupDiscovery(object):
   def computeThreshold(self, *, significanceLevel=0.05, method='SWAP_RANDOMIZATION', amount=100, setAsMinimum=False, verbose=False):
     sp = self._createSearchParametersObject()
 
-    threshold = redirectSystemOutErr(computeThreshold, sp, self._targetConcept, self._table, significanceLevel=significanceLevel, method=method, amount=amount, verbose=verbose)
+    threshold = redirectSystemOutErr(computeThreshold, sp, self._targetConcept, self._table, self._selection, significanceLevel=significanceLevel, method=method, amount=amount, verbose=verbose)
 
     if setAsMinimum:
       self.qualityMeasureMinimum = threshold
@@ -193,7 +235,7 @@ class SubgroupDiscovery(object):
     sp = self._createSearchParametersObject()
     # TODO: check functionality of nrThreads via sp.setNrThreads vs as argument to runSubgroupDiscovery
     from nl.liacs.subdisc import Process
-    sd = redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, None, sp, False, self.nrThreads, None, verbose=verbose)
+    sd = redirectSystemOutErr(Process.runSubgroupDiscovery, self._table, 0, self._selection, sp, False, self.nrThreads, None, verbose=verbose)
     self._runCalled = True
     self._sd = sd
 
@@ -221,10 +263,10 @@ class SubgroupDiscovery(object):
 
     from nl.liacs.subdisc import TargetType
     if self._targetConcept.getTargetType() == TargetType.SINGLE_NUMERIC:
-      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, sd, index, includeBase=includeBase, verbose=verbose, **kwargs)
+      return redirectSystemOutErr(getModelSingleNumeric, self._targetConcept, sd, self._selection, index, includeBase=includeBase, verbose=verbose, **kwargs)
     if self._targetConcept.getTargetType() in \
          ( TargetType.DOUBLE_REGRESSION, TargetType.DOUBLE_CORRELATION ):
-      return redirectSystemOutErr(getModelDoubleNumeric, self._targetConcept, sd, index, dfIndex=self._index, includeBase=includeBase, verbose=verbose, **kwargs)
+      return redirectSystemOutErr(getModelDoubleNumeric, self._targetConcept, sd, self._selection, index, dfIndex=self._index, selectionIndex=self._selectionIndex, includeBase=includeBase, verbose=verbose, **kwargs)
     else:
       raise NotImplementedError("getModel() is not implemented for this target type")
 
@@ -244,7 +286,7 @@ def generateResultDataFrame(sd, targetType):
 
 
 
-def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amount, setAsMinimum=False):
+def computeThreshold(sp, targetConcept, table, selection, *, significanceLevel, method, amount, setAsMinimum=False):
     from nl.liacs.subdisc import TargetType, QualityMeasure, Validation, NormalDistribution
     from nl.liacs.subdisc.gui import RandomQualitiesWindow
     import scipy.stats
@@ -265,9 +307,11 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
       qm = sp.getQualityMeasure()
       b = BitSet(table.getNrRows())
       b.set(0, table.getNrRows())
+
+      # TODO (from SubDisc): "check for subset selection"
       statistics = target.getStatistics(None, b, qm == QM.MMAD, QM.requiredStats(qm).contains(Stat.COMPL))
-      # TODO: ProbabilityDensityFunction or ProbabilityDensityFunction2?
-      pdf = ProbabilityDensityFunction2(target, None)
+
+      pdf = ProbabilityDensityFunction2(target, selection)
       pdf.smooth()
       qualityMeasure = QualityMeasure(qm, table.getNrRows(),
                                       statistics.getSubgroupSum(),
@@ -284,7 +328,7 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
     else:
       raise NotImplementedError()
 
-    validation = Validation(sp, table, None, qualityMeasure)
+    validation = Validation(sp, table, selection, qualityMeasure)
     qualities = validation.getQualities([ method, str(amount) ])
     if qualities is None:
       # TODO: Check how to handle this
@@ -296,7 +340,7 @@ def computeThreshold(sp, targetConcept, table, *, significanceLevel, method, amo
 
     return threshold
 
-def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=True):
+def getModelSingleNumeric(targetConcept, sd, selection, index, relative=True, includeBase=True):
   from nl.liacs.subdisc import TargetType, ProbabilityDensityFunction2
   from pandas import DataFrame
   import numpy as np
@@ -305,7 +349,7 @@ def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=T
   if not hasattr(index, '__iter__'):
     index = [ index ]
 
-  pdfBase = ProbabilityDensityFunction2(targetConcept.getPrimaryTarget(), None)
+  pdfBase = ProbabilityDensityFunction2(targetConcept.getPrimaryTarget(), selection)
   pdfBase.smooth()
   if includeBase:
     L = [ pdfBase ]
@@ -345,7 +389,8 @@ def getModelSingleNumeric(targetConcept, sd, index, relative=True, includeBase=T
 
   return df
 
-def getModelDoubleNumeric(targetConcept, sd, index, dfIndex=None, includeBase=True):
+def getModelDoubleNumeric(targetConcept, sd, selection, index, dfIndex=None, selectionIndex=None, includeBase=True):
+  # TODO: should this support selection?
   from nl.liacs.subdisc import TargetType, QM, RegressionMeasure
   from pandas import DataFrame
   import numpy as np
@@ -392,6 +437,7 @@ def getModelDoubleNumeric(targetConcept, sd, index, dfIndex=None, includeBase=Tr
 
   if regression:
     # REGRESSION_SSD_COMPLEMENT is the default here, but doesn't really matter
+    # TODO: Should this take selection into account?
     RM = RegressionMeasure(QM.REGRESSION_SSD_COMPLEMENT, targetConcept.getPrimaryTarget(), targetConcept.getSecondaryTarget())
     slope = RM.getSlope()
     intercept = RM.getIntercept()

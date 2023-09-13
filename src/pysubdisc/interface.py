@@ -71,7 +71,6 @@ def singleNominalTarget(data, targetColumn, targetValue):
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType
-  from math import ceil
 
   table = _createTable(data)
 
@@ -89,7 +88,7 @@ def singleNominalTarget(data, targetColumn, targetValue):
 
   sd = SubgroupDiscovery(targetConcept, table)
 
-  sd._initSearchParameters(qualityMeasure = 'CORTANA_QUALITY', minimumCoverage = ceil(0.1 * table._table.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'CORTANA_QUALITY')
 
   sd._checkColumnTypes()
 
@@ -104,7 +103,6 @@ def singleNumericTarget(data, targetColumn):
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType
-  from math import ceil
 
   table = _createTable(data)
 
@@ -121,7 +119,7 @@ def singleNumericTarget(data, targetColumn):
 
   sd = SubgroupDiscovery(targetConcept, table)
 
-  sd._initSearchParameters(qualityMeasure = 'Z_SCORE', minimumCoverage = ceil(0.1 * table._table.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'Z_SCORE')
 
   sd._checkColumnTypes()
 
@@ -137,7 +135,6 @@ def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType
-  from math import ceil
 
   table = _createTable(data)
 
@@ -158,7 +155,7 @@ def doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn):
 
   sd = SubgroupDiscovery(targetConcept, table)
 
-  sd._initSearchParameters(qualityMeasure = 'REGRESSION_SSD_COMPLEMENT', minimumCoverage = ceil(0.1 * table._table.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'REGRESSION_SSD_COMPLEMENT')
 
   sd._checkColumnTypes()
 
@@ -174,7 +171,6 @@ def doubleBinaryTarget(data, primaryTargetColumn, secondaryTargetColumn):
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType
-  from math import ceil
 
   table = _createTable(data)
 
@@ -195,7 +191,7 @@ def doubleBinaryTarget(data, primaryTargetColumn, secondaryTargetColumn):
 
   sd = SubgroupDiscovery(targetConcept, table)
 
-  sd._initSearchParameters(qualityMeasure = 'RELATIVE_WRACC', minimumCoverage = ceil(0.1 * table._table.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'RELATIVE_WRACC')
 
   sd._checkColumnTypes()
 
@@ -211,7 +207,6 @@ def doubleCorrelationTarget(data, primaryTargetColumn, secondaryTargetColumn):
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType
-  from math import ceil
 
   table = _createTable(data)
 
@@ -232,7 +227,7 @@ def doubleCorrelationTarget(data, primaryTargetColumn, secondaryTargetColumn):
 
   sd = SubgroupDiscovery(targetConcept, table)
 
-  sd._initSearchParameters(qualityMeasure = 'CORRELATION_R', minimumCoverage = ceil(0.1 * table._table.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = 'CORRELATION_R')
 
   sd._checkColumnTypes()
 
@@ -247,7 +242,6 @@ def multiNumericTarget(data, targetColumns):
   ensureJVMStarted()
 
   from nl.liacs.subdisc import TargetConcept, TargetType
-  from math import ceil
   from java.util import ArrayList
 
   table = _createTable(data)
@@ -278,7 +272,7 @@ def multiNumericTarget(data, targetColumns):
   else:
     qm = 'L2'
 
-  sd._initSearchParameters(qualityMeasure = qm, minimumCoverage = ceil(0.1 * table._table.getNrRows()))
+  sd._initSearchParameters(qualityMeasure = qm)
 
   sd._checkColumnTypes()
 

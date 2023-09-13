@@ -1,11 +1,53 @@
 from .java import ensureJVMStarted, redirectSystemOutErr
 
+class Table(object):
+  def __init__(self, table, index):
+    ensureJVMStarted()
+    self._table = table
+    self._index = index
+
+  def __str__(self):
+    t = f"{self._table.getNrRows()}x{self._table.getNrColumns()} SubDisc table"
+    return t
+
+  def _setColumnType(self, columns, t):
+    if isinstance(columns, str) or not hasattr(columns, '__iter__'):
+      columns = [ columns ]
+    for c in columns:
+      if not self._table.getColumn(c).setType(t):
+        raise RuntimeError(f"Failed to change type of column '{c}'")
+
+  def makeColumnsBinary(self, columns):
+    """Try to change the type of one or more columns to binary."""
+    from nl.liacs.subdisc import AttributeType
+    self._setColumnType(columns, AttributeType.BINARY)
+
+  def makeColumnsNominal(self, columns):
+    """Try to change the type of one or more columns to nominal."""
+    from nl.liacs.subdisc import AttributeType
+    self._setColumnType(columns, AttributeType.NOMINAL)
+
+  def makeColumnsNumeric(self, columns):
+    """Try to change the type of one or more columns to numeric."""
+    from nl.liacs.subdisc import AttributeType
+    self._setColumnType(columns, AttributeType.NUMERIC)
+
+  def describeColumns(self):
+    """Describe the columns/attributes in the table. Returns a DataFrame."""
+    import pandas as pd
+    L = [ [ str(column.getName()), column.getCardinality(), str(column.getType()) ] for column in self._table.getColumns() ]
+
+    df = pd.DataFrame(L, columns=['Attribute', 'Cardinality', 'Type'])
+    return df
+
+
+
 class SubgroupDiscovery(object):
-  def __init__(self, targetConcept, data, index):
+  def __init__(self, targetConcept, table):
     ensureJVMStarted()
     self._targetConcept = targetConcept
-    self._table = data
-    self._index = index
+    self._table = table._table
+    self._index = table._index
     self._runCalled = False
 
   @property
@@ -87,36 +129,6 @@ class SubgroupDiscovery(object):
     sp.setNrThreads(self.nrThreads)
 
     return sp
-
-  def _setColumnType(self, columns, t):
-    if isinstance(columns, str) or not hasattr(columns, '__iter__'):
-      columns = [ columns ]
-    for c in columns:
-      if not self._table.getColumn(c).setType(t):
-        raise RuntimeError(f"Failed to change type of column '{c}'")
-
-  def makeColumnsBinary(self, columns):
-    """Try to change the type of one or more columns to binary."""
-    from nl.liacs.subdisc import AttributeType
-    self._setColumnType(columns, AttributeType.BINARY)
-
-  def makeColumnsNominal(self, columns):
-    """Try to change the type of one or more columns to nominal."""
-    from nl.liacs.subdisc import AttributeType
-    self._setColumnType(columns, AttributeType.NOMINAL)
-
-  def makeColumnsNumeric(self, columns):
-    """Try to change the type of one or more columns to numeric."""
-    from nl.liacs.subdisc import AttributeType
-    self._setColumnType(columns, AttributeType.NUMERIC)
-
-  def describeColumns(self):
-    """Describe the columns/attributes in the table. Returns a DataFrame."""
-    import pandas as pd
-    L = [ [ str(column.getName()), column.getCardinality(), str(column.getType()) ] for column in self._table.getColumns() ]
-
-    df = pd.DataFrame(L, columns=['Attribute', 'Cardinality', 'Type'])
-    return df
 
   def describeSearchParameters(self):
     """Describe the current search parameters. Returns a string."""

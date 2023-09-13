@@ -4,13 +4,15 @@ from .interface import doubleRegressionTarget
 from .interface import doubleBinaryTarget
 from .interface import doubleCorrelationTarget
 from .interface import multiNumericTarget
+from .interface import loadDataFrame
 
 __all__ = [ singleNominalTarget,
             singleNumericTarget,
             doubleRegressionTarget,
             doubleBinaryTarget,
             doubleCorrelationTarget,
-            multiNumericTarget ]
+            multiNumericTarget,
+            loadDataFrame ]
 
 
 # Set package version

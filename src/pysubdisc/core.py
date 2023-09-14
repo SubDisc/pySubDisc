@@ -91,7 +91,7 @@ class SubgroupDiscovery(object):
 
   def _initSearchParameters(self, *, qualityMeasure='CORTANA_QUALITY', searchDepth=1, minimumCoverage=None, maximumCoverageFraction=0.9, minimumSupport=0, maximumSubgroups=1000, filterSubgroups=True, minimumImprovement=0.0, maximumTime=0, searchStrategy='BEAM', nominalSets=False, numericOperatorSetting='NORMAL', numericStrategy='NUMERIC_BINS', searchStrategyWidth=100, nrBins=8, nrThreads=None):
     # TODO: Clean this up
-    # TODO: Consider setting number of threads to number of cores
+
     # use inspect to avoid duplicating the argument list
     from inspect import signature
     sig = signature(self._initSearchParameters)

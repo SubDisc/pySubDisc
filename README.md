@@ -41,3 +41,106 @@ Some detailed examples can be found in the /examples folder.
 ## Documentation
 
 The SubDisc documentation might be of help for working with pySubDisc: https://github.com/SubDisc/SubDisc/wiki.
+
+### Data loading
+
+pySubDisc uses `pandas.DataFrame` tables as input. There are two options to pass these from pySubDisc to SubDisc itself:
+
+```python
+data = pandas.read_csv('adult.txt')
+
+# Create a SubgroupDiscovery target structure directly:
+sd = pysubdisc.singleNominalTarget(data, 'target', 'gr50K')
+
+# First load the dataframe into SubDisc for further preparation
+table = pysubdisc.loadDataFrame(data)
+sd = pysubdisc.singleNominalTarget(table, 'target', 'gr50K')
+```
+
+### Data preparation
+
+A `pySubDisc.Table` object can be manipulated before creating a SubDisc target using the following functions:
+
+```python
+# Load a pandas.DataFrame object
+table = pysubdisc.loadDataFrame(data)
+
+# Describe the columns (name, type, cardinality, enabled)
+print(table.describeColumns())
+
+# Change column type to binary.
+table.makeColumnsBinary(['column', 'other_column']
+
+# Change column type to numeric.
+table.makeColumnsNumeric(['column', 'other_column']
+
+# Change column type to nominal.
+table.makeColumnsNominal(['column', 'other_column']
+
+# Disable columns
+table.disableColumns(['column', 'other_column']
+
+# Enable columns
+table.enableColumns(['column', 'other_column']
+
+# Select a subset of the rows by passing a pandas boolean Series
+table.setSelection(data['education'] == 'Bachelors')
+
+# Reset selection of rows to the full data set
+table.clearSelection()
+```
+
+### Configuring subgroup discovery
+
+A `pySubDisc.SubgroupDiscovery` object can be created by the following target functions:
+
+```python
+# single nominal target
+sd = pysubdisc.singleNominalTarget(data, targetColumn, targetValue)
+
+# single numeric target
+sd = pysubdisc.singleNumericTarget(data, targetColumn)
+
+# double regression target
+sd = pysubdisc.doubleRegressionTarget(data, primaryTargetColumn, secondaryTargetColumn)
+
+# double correlation target
+sd = pysubdisc.doubleCorrelationTarget(data, primaryTargetColumn, secondaryTargetColumn)
+
+# double binary target
+sd = pysubdisc.doubleBinaryTarget(data, primaryTargetColumn, secondaryTargetColumn)
+
+# multi numeric target
+sd = pysubdisc.multiNumericTarget(data, targetColumns)
+```
+
+After creating a `pySubDisc.SubgroupDiscovery` object, you can configure its search parameters. For example:
+
+```python
+print(sd.describeSearchParameters())
+
+sd.numericStrategy = 'NUMERIC_BEST'
+sd.qualityMeasure = 'RELATIVE_WRACC'
+sd.qualityMeasureMinimum = 2
+sd.searchDepth = 2
+```
+
+An appropriate value of the `qualityMeasure` option can in particular be computed for various target types using the `computeThreshold` function.
+
+```python
+# If setAsMinimum is set to True, the qualityMeasureMinimum parameters is updated directly
+threshold = sd.computeThreshold(significanceLevel=0.05, method='SWAP_RANDOMIZATION', amount=100, setAsMinimum=True)
+```
+
+### Run subgroup discovery
+
+After configuring the search parameters, you can run the subgroup discovery process by calling the `run()` method.
+
+```python
+sd.run()
+
+# The resulting subgroups are given as a pandas.DataFrame, with one row per subgroup
+print(sd.asDataFrame())
+```
+
+For a number of the target types, a `showModel()` method is available to aid visualization of the discovered subgroups. The scripts in the `/examples` directory demonstrate its use.

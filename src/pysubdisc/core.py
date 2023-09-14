@@ -276,6 +276,11 @@ class SubgroupDiscovery(object):
     else:
       raise NotImplementedError("getModel() is not implemented for this target type")
 
+  def patternTeam(self, size, returnGrouping=False, verbose=True):
+    self._ensurePostRun()
+    size = int(size)
+    return redirectSystemOutErr(patternTeam, self._sd.getResult(), self._table, self.asDataFrame(), size, returnGrouping=returnGrouping, verbose=verbose)
+
 def generateResultDataFrame(sd, targetType):
   import pandas as pd
 
@@ -479,3 +484,39 @@ def getModelDoubleNumeric(targetConcept, sd, selection, index, dfIndex=None, sel
 
   return df
 
+def patternTeam(result, table, df, size, returnGrouping):
+  import pandas as pd
+  import numpy as np
+
+  pt = result.getPatternTeam(table, size)
+  if returnGrouping:
+    grouping = result.getGrouping(pt)
+
+  pt = list(pt)
+
+  count = df.shape[0]
+  assert df.index.equals(pd.RangeIndex(count))
+  assert len(pt) == size
+
+  L = [ False ] * count
+
+  for p in pt:
+    # IDs are 1-based
+    L[p.getID() - 1] = True
+
+  pt_df = df[L]
+
+  if not returnGrouping:
+    return pt_df
+
+  grouping = list(grouping)
+  grouping = [ list(x) for x in grouping ]
+
+  g = np.zeros((count, size), dtype=bool)
+  for i,x in enumerate(grouping):
+    for s in x:
+      g[s.getID() - 1, i] = True
+
+  g_df = pd.DataFrame(data=g, index=df.index, columns=range(size))
+
+  return pt_df, g_df

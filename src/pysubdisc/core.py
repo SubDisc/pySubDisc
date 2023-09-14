@@ -276,10 +276,10 @@ class SubgroupDiscovery(object):
     else:
       raise NotImplementedError("getModel() is not implemented for this target type")
 
-  def patternTeam(self, size, returnGrouping=False, verbose=True):
+  def getPatternTeam(self, size, returnGrouping=False, verbose=True):
     self._ensurePostRun()
     size = int(size)
-    return redirectSystemOutErr(patternTeam, self._sd.getResult(), self._table, self.asDataFrame(), size, returnGrouping=returnGrouping, verbose=verbose)
+    return redirectSystemOutErr(getPatternTeam, self._sd.getResult(), self._table, self.asDataFrame(), size, returnGrouping=returnGrouping, verbose=verbose)
 
 def generateResultDataFrame(sd, targetType):
   import pandas as pd
@@ -484,7 +484,7 @@ def getModelDoubleNumeric(targetConcept, sd, selection, index, dfIndex=None, sel
 
   return df
 
-def patternTeam(result, table, df, size, returnGrouping):
+def getPatternTeam(result, table, df, size, returnGrouping):
   import pandas as pd
   import numpy as np
 

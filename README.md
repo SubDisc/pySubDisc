@@ -49,10 +49,10 @@ pySubDisc uses `pandas.DataFrame` tables as input. There are two options to pass
 ```python
 data = pandas.read_csv('adult.txt')
 
-# Create a SubgroupDiscovery target structure directly:
+# Either, create a SubgroupDiscovery target structure directly
 sd = pysubdisc.singleNominalTarget(data, 'target', 'gr50K')
 
-# First load the dataframe into SubDisc for further preparation
+# Or, first load the dataframe into SubDisc for further preparation
 table = pysubdisc.loadDataFrame(data)
 sd = pysubdisc.singleNominalTarget(table, 'target', 'gr50K')
 ```
@@ -68,13 +68,13 @@ table = pysubdisc.loadDataFrame(data)
 # Describe the columns (name, type, cardinality, enabled)
 print(table.describeColumns())
 
-# Change column type to binary.
+# Change column type to binary
 table.makeColumnsBinary(['column', 'other_column']
 
-# Change column type to numeric.
+# Change column type to numeric
 table.makeColumnsNumeric(['column', 'other_column']
 
-# Change column type to nominal.
+# Change column type to nominal
 table.makeColumnsNominal(['column', 'other_column']
 
 # Disable columns
@@ -125,10 +125,10 @@ sd.qualityMeasureMinimum = 2
 sd.searchDepth = 2
 ```
 
-An appropriate value of the `qualityMeasure` option can in particular be computed for various target types using the `computeThreshold` function.
+An appropriate value of the `qualityMeasure` option can in particular be computed for various target types using the `computeThreshold()` function.
 
 ```python
-# If setAsMinimum is set to True, the qualityMeasureMinimum parameters is updated directly
+# If setAsMinimum is set to True, the qualityMeasureMinimum parameter is updated directly
 threshold = sd.computeThreshold(significanceLevel=0.05, method='SWAP_RANDOMIZATION', amount=100, setAsMinimum=True)
 ```
 
@@ -142,5 +142,13 @@ sd.run()
 # The resulting subgroups are given as a pandas.DataFrame, with one row per subgroup
 print(sd.asDataFrame())
 ```
+
+The function `getSubgroupMembers()` returns a set of members of a subgroup as a pandas boolean Series.
+
+```python
+# Get rows corresponding to subgroup #0
+subset = data[sd.getSubgroupMembers(0)]
+```
+
 
 For a number of the target types, a `showModel()` method is available to aid visualization of the discovered subgroups. The scripts in the `/examples` directory demonstrate its use.

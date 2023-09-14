@@ -75,6 +75,12 @@ class Table(object):
 
     self._selectionIndex = self._index[subset]
 
+  def clearSelection(self):
+    """Reset selection of rows to the full data set."""
+    self._selection = None
+    self._selectionIndex = None
+
+
 class SubgroupDiscovery(object):
   def __init__(self, targetConcept, table):
     ensureJVMStarted()

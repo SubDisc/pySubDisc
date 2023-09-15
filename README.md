@@ -132,16 +132,21 @@ An appropriate value of the `qualityMeasure` option can in particular be compute
 threshold = sd.computeThreshold(significanceLevel=0.05, method='SWAP_RANDOMIZATION', amount=100, setAsMinimum=True)
 ```
 
-### Run subgroup discovery
+### Running subgroup discovery
 
 After configuring the search parameters, you can run the subgroup discovery process by calling the `run()` method.
 
 ```python
 sd.run()
+```
 
+### Examining the results
+
+```python
 # The resulting subgroups are given as a pandas.DataFrame, with one row per subgroup
 print(sd.asDataFrame())
 ```
+
 
 The function `getSubgroupMembers()` returns a set of members of a subgroup as a pandas boolean Series.
 
@@ -152,3 +157,18 @@ subset = data[sd.getSubgroupMembers(0)]
 
 
 For a number of the target types, a `showModel()` method is available to aid visualization of the discovered subgroups. The scripts in the `/examples` directory demonstrate its use.
+
+
+The function `getPatternTeam()` returns a Pattern Team for the discovered subgroups.
+
+```python
+# if returnGrouping is True, getPatternTeam will also return
+# the grouping of subgroups according to the pattern team
+patternTeam, grouping = sd.getPatternTeam(3, returnGrouping=True)
+
+print(patternTeam)
+
+# print the subgroups for the first of the three determined groups
+df = sd.asDataFrame()
+print(df[grouping[0]])
+```

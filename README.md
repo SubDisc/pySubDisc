@@ -2,8 +2,6 @@
 
 pySubDisc is a Python wrapper for [SubDisc: Subgroup Discovery](https://github.com/SubDisc/SubDisc).
 
-This package is still early in development and all functionality and syntax are subject to change. 
-
 ## Installation
 
 pySubDisc is available from PyPI. To install it, run:

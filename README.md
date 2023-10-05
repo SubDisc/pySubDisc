@@ -6,7 +6,15 @@ This package is still early in development and all functionality and syntax are 
 
 ## Installation
 
-This will be streamlined soon:
+pySubDisc is available from PyPI. To install it, run:
+
+```bash
+python3 -m pip install pysubdisc
+```
+
+## Installation from source
+
+To install pySubDisc from its sources, follow these steps:
 
 * From https://github.com/SubDisc/SubDisc, use `mvn package` to build `target/subdisc-gui.jar`
 * Place `subdisc-gui.jar` in `src/pysubdisc/jars`

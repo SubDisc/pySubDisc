@@ -26,13 +26,13 @@ jobs:
         fetch-depth: 0
 
     - name: Set up JDK 11
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '11'
         distribution: 'temurin'
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
 
@@ -64,9 +64,10 @@ jobs:
       run: python -m build
 
     - name: Set up conda
-      uses: conda-incubator/setup-miniconda@v2
+      uses: conda-incubator/setup-miniconda@v3
       with:
         auto-activate-base: true
+        activate-environment: ""
 
     - name: Build conda package
       run: |
@@ -74,7 +75,7 @@ jobs:
         conda build conda
 
     - name: Upload wheel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pysubdisc-wheel
         path: |
@@ -83,7 +84,7 @@ jobs:
         retention-days: 2
 
     - name: Upload conda package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pysubdisc-conda
         path: /usr/share/miniconda/conda-bld/noarch/pysubdisc-${{ env.pysubdisc_version }}-py_*.tar.bz2

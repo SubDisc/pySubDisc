@@ -478,7 +478,7 @@ def getModelDoubleNumeric(targetConcept, sd, selection, index, dfIndex=None, sel
       data[:, f*j+baseCols+1] = intercept + slope * data[:, 0]
     for i in range(data.shape[0]):
       if not members.get(i):
-        data[i, f*j+baseCols] = np.NaN
+        data[i, f*j+baseCols] = np.nan
 
   df = DataFrame(data=data, index=rows, columns=columns, copy=True)
 

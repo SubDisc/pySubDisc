@@ -50,6 +50,7 @@ def _createTable(data):
   from .core import Table
 
   if isinstance(data, sdTable):
+    import pandas as pd
     index = pd.RangeIndex(data.getNrRows())
     table = Table(data, index)
   elif isinstance(data, Table):

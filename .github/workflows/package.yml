@@ -87,5 +87,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: pysubdisc-conda
-        path: /usr/share/miniconda/conda-bld/noarch/pysubdisc-${{ env.pysubdisc_version }}-py_*.tar.bz2
+        path: /usr/share/miniconda/conda-bld/noarch/pysubdisc-${{ env.pysubdisc_version }}-py_*.conda
         retention-days: 2
